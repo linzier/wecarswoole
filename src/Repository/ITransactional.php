@@ -16,8 +16,14 @@ interface ITransactional
     public function getContext();
 
     /**设置事务主体上下文
+     * 注意：在 setContext 切换 context 之前，需将最原始的 context 暂存起来，供后面复原使用
      * @param mixed $context 事务上下文，需提供 commit、rollback 方法。
      * @return mixed
      */
     public function setContext($context);
+
+    /**
+     * 恢复事务上下文到最开始的那个
+     */
+    public function restoreContext();
 }

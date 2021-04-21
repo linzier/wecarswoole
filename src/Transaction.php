@@ -16,15 +16,17 @@ class Transaction
 
     private $status;
     private $context;
+    private $repositories;
 
     protected function __construct()
     {
+        $this->repositories = [];
         $this->status = self::STATUS_OPEN;
     }
 
     public function __destruct()
     {
-        if ($this->status != self::STATUS_CLOSED) {
+        if ($this->status == self::STATUS_OPEN) {
             $this->context->rollback();
         }
     }
@@ -44,16 +46,24 @@ class Transaction
 
     public function commit()
     {
+        if ($this->status != self::STATUS_OPEN) {
+            throw new \Exception("事务提交失败：事务未开启", ErrCode::ERROR);
+        }
+
         $result = $this->context->commit();
-        $this->status = self::STATUS_CLOSED;
+        $this->finish();
 
         return $result;
     }
 
     public function rollback()
     {
+        if ($this->status != self::STATUS_OPEN) {
+            throw new \Exception("事务回滚失败：事务未开启", ErrCode::ERROR);
+        }
+
         $result = $this->context->rollback();
-        $this->status = self::STATUS_CLOSED;
+        $this->finish();
 
         return $result;
     }
@@ -81,5 +91,18 @@ class Transaction
 
             $repository->setContext($this->context);
         }
+
+        $this->repositories = array_merge($this->repositories, $repositories);
+    }
+
+    protected function finish()
+    {
+        $this->status = self::STATUS_CLOSED;
+        // 将仓储的 Context 复原
+        foreach ($this->repositories as $repository) {
+            $repository->restoreContext();
+        }
+        unset($this->repositories);
+        unset($this->context);
     }
 }
