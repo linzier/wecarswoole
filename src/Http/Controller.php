@@ -71,9 +71,7 @@ class Controller extends EsController
      */
     protected function lockerRules(): array
     {
-        return [
-            '__default' => 'default'
-        ];
+        return [];
     }
 
     /**
