@@ -2,8 +2,6 @@
 
 框架广泛使用中间件的方式实现可扩展性。
 
-中间件使用观察者模式实现业务逻辑解耦与可扩展性。
-
 任何类通过使用 trait `WecarSwoole\Middleware\MiddlewareHelper` 都可以拥有添加、执行中间件的能力。
 
 中间件并没有统一接口，各处根据需求定义自己的中间件接口（如 IRouteMiddleware、IControllerMiddleware 等）。
