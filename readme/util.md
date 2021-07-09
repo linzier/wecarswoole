@@ -43,22 +43,22 @@
     }
 
     // 更复杂的使用（带传参）
-    $r = Concurrent::instance()
-    ->addParams([1, 3, 5], [], ['a', 'b', 'c'])
-    ->addTasks(
+    $r = Concurrent::instance();
+    $r->addParams(1, 2, 3)
+    ->addTask(
         function($a, $b, $c) {
             Co::sleep(1);
             return "$a - $b - $c";
-        },
-        function () {
-            Co::sleep(2);
-            return "------";
-        },
-        function ($a, $b, $c) {
-            Co::sleep(1);
-            throw new \Exception("我错了", 300);
         }
-    )->exec();
+    );
+    $r->addParams(4)
+    ->addTask(
+        function($d) {
+          Co::sleep(1);
+          return $d;  
+        }
+    );
+    $r->exec();
     ...
   ```
 

@@ -6,11 +6,6 @@ use Swoole\Coroutine\Channel;
 
 /**
  * 并发执行多个业务逻辑，并等待所有业务逻辑执行完毕后一起返回所有的执行结果
- * 注意 params 需要和 tasks 一一对应，param 第二维被解析给对应的 task 作为参数。如
- * $params = [[1,2,3], ['a', 'b', 'c']]
- * $tasks = [$func1, $func2]
- * 则调用：
- * $r1 = $func1(1, 2, 3)，$r2 = $func2('a', 'b', 'c')
  * 返回：
  * 返回值数组里面依次存放有对应函数的返回结果：$rtns = [$r1, $r2]。
  * 如果任务抛出异常，则会将异常对象返回（\Throwable 实例），外面需要先判断返回值是否 \Throwable 类型
@@ -27,6 +22,7 @@ class Concurrent
 
     /**
      * 添加参数
+     * 该方法要和 addTask 结合使用，$params 参数是对应的 task 的参数
      */
     public function addParams(...$params): Concurrent
     {
@@ -34,20 +30,20 @@ class Concurrent
             $this->params = [];
         }
 
-        $this->params = array_merge($this->params, $params);
+        $this->params[] = $params;
         return $this;
     }
 
     /**
      * 添加待执行任务
      */
-    public function addTasks(...$tasks): Concurrent
+    public function addTask($task): Concurrent
     {
         if (!is_array($this->tasks)) {
             $this->tasks = [];
         }
 
-        $this->tasks = array_merge($this->tasks, $tasks);
+        $this->tasks[] = $task;
         return $this;
     }
 
