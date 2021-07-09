@@ -56,6 +56,14 @@ class Response
         return $this->fromRealRequest;
     }
 
+    /**
+     * @var bool 网络传输层是否 ok
+     */
+    public function isTransOk(): bool
+    {
+        return $this->status >= 200 && $this->status < 300;
+    }
+
     public function __toString()
     {
         return json_encode([
