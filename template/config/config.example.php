@@ -103,6 +103,7 @@ $baseConfig = [
     // 最低记录级别：debug, info, warning, error, critical, off
     'log_level' => apollo('application', 'log_level') ?: 'info',
     'base_url' => apollo('application', 'base_url'),
+    'sql_log' => apollo('application', 'sql_log') ?: 'off',// 是否开启 SQL 日志（日志级别是info）
 ];
 
 return array_merge(
