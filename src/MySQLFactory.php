@@ -9,6 +9,7 @@ use Dev\MySQL\Connector\DBConfig;
 use Dev\MySQL\Pool\CoPool;
 use Dev\MySQL\Query;
 use Dev\MySQL\Transaction\CoTransaction;
+use Psr\Log\LoggerInterface;
 
 /**
  * MySQL 查询器工厂，组装查询器
@@ -44,9 +45,10 @@ class MySQLFactory
             $readConfObjs[] = self::createConfObj($readConf);
         }
 
+        $logger = strtolower(Config::getInstance()->getConf("sql_log") ?? 'off') == 'on' ? Container::get(LoggerInterface::class) : null;
         $mySQLBuilder = CoConnectorBuilder::instance($writeConfObj, $readConfObjs);
         $pool = CoPool::instance($mySQLBuilder, $dbConf['pool']['size'] ?? 30);
-        $transaction = new CoTransaction($pool);
+        $transaction = new CoTransaction($pool, $logger);
 
         return new Query($transaction);
     }
