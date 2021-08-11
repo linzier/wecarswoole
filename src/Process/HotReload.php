@@ -24,7 +24,7 @@ class HotReload extends WecarAbstractProcess
     /**
      * 启动定时器进行循环扫描
      */
-    public function run($arg)
+    public function exec($arg)
     {
         // 此处指定需要监视的目录 建议只监视App目录下的文件变更
         $this->monitorDirs = !empty($arg['monitorDirs']) ? $arg['monitorDirs'] : [EASYSWOOLE_ROOT . '/app'];

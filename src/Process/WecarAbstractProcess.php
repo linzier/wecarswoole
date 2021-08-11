@@ -3,7 +3,8 @@
 namespace WecarSwoole\Process;
 
 use EasySwoole\Component\Process\AbstractProcess;
-use Swoole\Coroutine;
+use EasySwoole\Component\Timer;
+use Swoole\Event;
 use Swoole\Process;
 
 /**
@@ -12,16 +13,27 @@ use Swoole\Process;
  */
 abstract class WecarAbstractProcess extends AbstractProcess
 {
-    function __start(Process $process)
-    {
-        Process::signal(SIGTERM, function () {
-            go(function () {
-                Process::signal(SIGTERM, null);// 先取消掉该信号处理器
-                Coroutine::sleep(0.1);// 等待0.1秒，为的是让其他的处理程序先执行
-                Process::kill($this->getPid(), SIGTERM);// 再发一次SIGTERM终止当前进程
-            });
-        });
+    private $swProcess;
 
+    public function __start(Process $process)
+    {
+        $this->swProcess = $process;
         parent::__start($process);
     }
+
+    public function run($arg)
+    {
+        // 覆盖掉 AbstractProcess 中的事件注册
+        Process::signal(SIGTERM, function () {
+            Process::signal(SIGTERM, null);// 先取消掉该信号处理器
+            swoole_event_del($this->swProcess->pipe);// 删除管道上的事件循环
+            Timer::getInstance()->clearAll();// 清除定时器
+            Event::exit();// 退出事件循环
+            Process::kill($this->getPid(), SIGTERM);// 再发一次SIGTERM终止当前进程
+        });
+
+        $this->exec($arg);
+    }
+
+    abstract protected function exec($arg);
 }
