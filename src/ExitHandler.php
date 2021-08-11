@@ -17,6 +17,7 @@ use Swoole\Timer;
 class ExitHandler
 {
     private static $handlers = [];
+    private static $done = false;
 
     public static function addHandler(Closure $callable)
     {
@@ -25,6 +26,12 @@ class ExitHandler
 
     public static function exec(Server $server, int $workerId)
     {
+        if (self::$done) {
+            return;
+        }
+
+        self::$done = true;
+
         foreach (self::$handlers as $handler) {
             call_user_func($handler, $server, $workerId);
         }
