@@ -54,11 +54,13 @@
 
 7. 以调试模式启动：`php easyswoole start --env=dev --debug`（调试模式下会打印所有的日志到屏幕）
 
-8. 停止：`php easyswoole stop`
+8. 开启热加载模式：`php easyswoole start --env=dev --hot`（在非生产环境加--hot会开启热加载模式，当文件有变更时自动重启worker进程）
 
-9. 重启：`php easyswoole reload all`。注意：不会重启用户自定义进程。
+9. 停止：`php easyswoole stop`
 
-9. 其他指令参见 easyswoole 官网
+10.  重启：`php easyswoole reload all`。注意：不会重启用户自定义进程。
+
+11. 其他指令参见 easyswoole 官网
 
 > 生产环境请使用 `composer install --no-dev`，其它环境请使用 `composer install`，因为非生产环境以后可能会加单元测试流程。
 
