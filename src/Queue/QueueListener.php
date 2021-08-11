@@ -14,7 +14,7 @@ class QueueListener
      */
     public static function listen(string $queueName, $callback)
     {
-        Queue::instance($queueName)->consumer()->listen(function (Job $job) use ($callback) {
+        Queue::consumer($queueName)->listen(function (Job $job) use ($callback) {
             $data = $job->getJobData();
             call_user_func($callback, $data);
         }, 1);
@@ -25,6 +25,6 @@ class QueueListener
      */
     public static function stop(string $queueName)
     {
-        Queue::instance($queueName)->consumer()->stopListen();
+        Queue::consumer($queueName)->stopListen();
     }
 }

@@ -10,6 +10,7 @@ use EasySwoole\Component\Context\ContextManager;
 use EasySwoole\Http\Request;
 use EasySwoole\Http\Response;
 use EasySwoole\Component\Di;
+use WecarSwoole\ExitHandler;
 use WecarSwoole\Process\ApolloWatcher;
 use WecarSwoole\Process\HotReload;
 use WecarSwoole\RequestId;
@@ -50,6 +51,11 @@ class EasySwooleEvent implements Event
         // worker 进程启动脚本
         $register->add(EventRegister::onWorkerStart, function () {
             Bootstrap::boot();
+        });
+
+        // worker 退出事件
+        $register->add(EventRegister::onWorkerExit, function ($server, $workerId) {
+            ExitHandler::exec($server, $workerId);
         });
 
         // 定时任务

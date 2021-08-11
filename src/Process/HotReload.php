@@ -2,7 +2,6 @@
 
 namespace WecarSwoole\Process;
 
-use EasySwoole\Component\Process\AbstractProcess;
 use EasySwoole\EasySwoole\ServerManager;
 use EasySwoole\Utility\File;
 use Swoole\Table;
@@ -13,7 +12,7 @@ use Swoole\Timer;
  * Class HotReload
  * @package WecarSwoole\Process
  */
-class HotReload extends AbstractProcess
+class HotReload extends WecarAbstractProcess
 {
     /** @var \swoole_table $table */
     protected $table;

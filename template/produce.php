@@ -13,7 +13,7 @@ return [
         'SETTING' => [
             'worker_num' => 2,
             'task_worker_num' => 2,
-            'reload_async' => false,
+            'reload_async' => true,
             'max_wait_time' => 5,
             'max_request' => 10000,
             'task_enable_coroutine' => true,
