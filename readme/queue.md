@@ -2,14 +2,13 @@
 Wecarswoole 基于 easyswoole/queue 组件实现了队列，使用 redis 实现队列。
 
 ### 使用：
-- 获取队列生产者实例：`$producer = Queue::producer($queueName)`；
 - 入列：
     ```
     use EasySwoole\Queue\Job;
     ...
     $job = new Job();
     $job->setJobData(['task_id' => 123456, 'enqueue_time' => time()]);
-    $producer->push($job);
+    Queue::producer($queueName)->push($job);
     ```
 - 出列（监听）：
   ```
