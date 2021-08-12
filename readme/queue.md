@@ -26,9 +26,18 @@ Wecarswoole 基于 easyswoole/queue 组件实现了队列，使用 redis 实现�
 
             // 启动队列监听（仅在 worker 进程启动）
             if (!$server->taskworker) {
+                // worker退出时停止监听
+                ExitHandler::addHandler(function () {
+                    QueueListener::stop($queueName);
+                });
+
+                // 监听
                 QueueListener::listen($queueName, function ($data) {
-                    // do something
-                    ...
+                    try {
+                        // do something
+                    } catch (\Throwable $e) {
+                        
+                    }
                 });
             }
         });
