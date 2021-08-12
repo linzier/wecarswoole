@@ -64,7 +64,7 @@
 
 > 生产环境请使用 `composer install --no-dev`，其它环境请使用 `composer install`，因为非生产环境以后可能会加单元测试流程。
 
-**注意**
+**注意：**
 
 > 1. 由于我们目前没有私有 composer 仓库，故上面的配置文件采用 vcs 仓储模式加载组件，包括以后开发的新组建也要将 gitlab 地址加入到这里面（必须加入到项目的 composer.json 中，加入到下级组件的 composer.json 是无效的）；
 > 2. 当搭建了私有 composer 仓库后，可以删掉这些 `vcs`  配置，只需将 `packagist` 项改成我们自己的私有仓库地址即可；
@@ -74,6 +74,12 @@
 >    1. 查看现在用的源：`composer config -lg`；
 >    2. 修改源：`composer config -g repo.packagist composer https://mirrors.aliyun.com/composer/`
 
+**关于 worker 进程的退出：**
+项目默认使用 reload_async 模式退出，此模式下，关闭服务时（SIGTERM信号），进程会等待里面的所有协程都退出后才退出，如果进程中存在“常驻”协程（定时器、while 无限循环），无法主动退出，则会导致进程一致等待，直到等待超时退出。
+
+框架提供了 `ExitHandler` 来解决此问题，在必要的地方调 `ExitHandler::addHandler($callable)` 注册进程退出处理程序，可在里面设置循环终止条件、停止队列监听等。系统在 `onWorkerExit` 回调中执行 `ExitHandler::exec($server, $workerId)` 触发相关处理器程序。
+
+框架已经在此处理器里面清除了所有的定时器。
 
 
 ### 在现有项目上开发

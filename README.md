@@ -13,7 +13,6 @@ WecarSwoole 是基于 EasySwoole 开发的适用于喂车业务系统的 Web 开
 - phpredis 扩展
   
 ### 系统设计要点
-
 - 可扩展性
 - 容易和第三方系统对接
 - 可测试
@@ -24,7 +23,6 @@ WecarSwoole 是基于 EasySwoole 开发的适用于喂车业务系统的 Web 开
   - 优先使用多个类组合完成功能，而不是全塞到基类里面实现。
 
 ### 目录
-
 - [启动项目](./readme/creat_project.md)
 - [新项目部署](./readme/deploy.md)
 - [注意点](./readme/attention.md)
