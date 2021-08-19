@@ -4,11 +4,12 @@ namespace WecarSwoole\Util;
 
 use WecarSwoole\Exceptions\ParamsCannotBeNullException;
 use EasySwoole\EasySwoole\Config as ESConfig;
+use WecarSwoole\SubServer\Servers;
 
 class Url
 {
     /**
-     * @param string $path
+     * @param string $path 支持绝对、相对、伪协议模式如WX://path/to/name会根据配置中心配置转成诸如 https://wx.weicheche.cn/path/to/name
      * @param array $queryParams
      * @param array $flagParams
      * @return string
@@ -16,7 +17,19 @@ class Url
      */
     public static function realUrl(string $path, array $queryParams = [], array $flagParams = [])
     {
-        return self::assemble($path, self::isCompleteUrl($path) ? '' : self::baseUrl(), $queryParams, $flagParams);
+        if (strpos($path, '://') !== false && strpos($path, 'http') !== 0) {
+            $data = explode('://', $path);
+            $path = $data[1];
+            
+            if (!$server = Servers::getInstance()->getByAlias($data[0])) {
+                throw new \Exception("非法的服务别名:{$data[0]}");
+            }
+            $baseUrl = $server->address()->url();
+        } else {
+            $baseUrl = self::isCompleteUrl($path) ? '' : self::baseUrl();
+        }
+
+        return self::assemble($path, $baseUrl, $queryParams, $flagParams);
     }
 
     /**
