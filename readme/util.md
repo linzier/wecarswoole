@@ -8,7 +8,7 @@
   - `join(...$paths):string`：拼接文件名
   - … easyswoole 提供的功能
 - `Url`：Url 辅助类。
-  - `realUrl(string $path, array $queryParams = [], array $flagParams = [])`：根据配置文件生成绝对 url。
+  - `realUrl(string $path, array $queryParams = [], array $flagParams = [])`：根据配置文件生成绝对 url，支持绝对、相对、伪协议模式如WX://path/to/name会根据配置中心配置转成诸如 https://wx.weicheche.cn/path/to/name。
   - `assemble(string $uri, string $base = '', array $queryParams = [], array $flagParams = []): string`：组装 url
   - `parse(string $url): array`：解析出 schema,host,path,query_string
 - `Mock`：模拟数据生成器。

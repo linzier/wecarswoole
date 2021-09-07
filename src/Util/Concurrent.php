@@ -3,6 +3,7 @@
 namespace WecarSwoole\Util;
 
 use Swoole\Coroutine\Channel;
+use WecarSwoole\ErrCode;
 
 /**
  * 并发执行多个业务逻辑，并等待所有业务逻辑执行完毕后一起返回所有的执行结果
@@ -14,6 +15,7 @@ class Concurrent
 {
     private $params;
     private $tasks;
+    private static $throwError = false;
 
     public static function instance(): Concurrent
     {
@@ -47,6 +49,11 @@ class Concurrent
         return $this;
     }
 
+    public function throwError(bool $throw = true)
+    {
+        self::$throwError = $throw;
+    }
+
     /**
      * 对外接口
      * $tasks 待执行函数
@@ -61,6 +68,12 @@ class Concurrent
      */
     public static function simpleExec(...$tasks): array
     {
+        // 看最后一个是不是 bool，如果是，则该值表示是否对外抛出异常
+        $last = $tasks[count($tasks) - 1];
+        if (is_bool($last)) {
+            self::$throwError = $last;
+            array_pop($tasks);
+        }
         return self::execTasks($tasks);
     }
 
@@ -80,7 +93,6 @@ class Concurrent
                 try {
                     $rtn = call_user_func($task, ...($params[$index] ?? []));
                 } catch (\Throwable $e) {
-                    // 抛异常，将异常返回
                     $rtn = $e;
                 }
                 $returns[$index] = $rtn;
@@ -91,6 +103,23 @@ class Concurrent
         for (; $cnt > 0; $cnt--) {
             $channel->pop();
         }
+
+        // 如果要求直接抛出异常，则将所有的异常合并抛出
+        if (self::$throwError) {
+            $err = '';
+            foreach ($returns as $rtn) {
+                if (!$rtn instanceof \Throwable) {
+                    continue;
+                }
+
+                $err .= $rtn . ';';
+            }
+
+            self::$throwError = false;
+            throw new \Exception($err, ErrCode::CONC_EXEC_FAIL);
+        }
+
+        self::$throwError = false;
 
         return $returns;
     }

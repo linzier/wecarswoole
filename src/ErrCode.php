@@ -17,4 +17,5 @@ class ErrCode
     public const ERROR = 500;
     public const PARAM_VALIDATE_FAIL = 300;
     public const AUTH_FAIL = 301;
+    public const CONC_EXEC_FAIL = 400;// 并发执行异常
 }
