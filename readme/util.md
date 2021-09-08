@@ -12,12 +12,36 @@
   - `assemble(string $uri, string $base = '', array $queryParams = [], array $flagParams = []): string`：组装 url
   - `parse(string $url): array`：解析出 schema,host,path,query_string
 - `Mock`：模拟数据生成器。
-- `Concurrent`：并发执行业务逻辑，并等待所有逻辑执行完成后返回所有的执行结果。注意必须在协程上下文中使用。使用实例：
+- `CContext`：协程上下文对象。在写协程并发程序时，为防止单例（或静态类）的变量在协程间相互影响，可以使用协程上下文对象来保存变量。用法：
+  ```
+  <?php
+    use WecarSwoole\CContext;
+
+    class ClassName
+    {
+      private $context;
+
+      private function __construct()
+      {
+        $this->context = new CContext();
+      }
+      ...
+      public function fuc1()
+      {
+        ...
+        $this->context["foo"] = "bar";
+        ...
+        $var = $this->context["foo"];
+        ...
+      }
+    }
+  ```
+- `Concurrent`：并发执行业务逻辑，并等待所有逻辑执行完成后返回所有的执行结果。注意必须在协程上下文中使用。使用实例（注意必须在协程中使用）：
   ```
     // 便捷使用
     $a = $b = $c = 5;
     echo "start:" . time()."\n";
-    $r = Concurrent::simpleExec(
+    $r = Concurrent::new()->simpleExec(
         function() use ($a, $b, $c) {
             Co::sleep(1);
             return "$a - $b - $c";
@@ -43,7 +67,7 @@
     }
 
     // 更复杂的使用（带传参）
-    $r = Concurrent::instance();
+    $r = Concurrent::new();
     $r->addParams(1, 2, 3)
     ->addTask(
         function($a, $b, $c) {
@@ -59,7 +83,9 @@
         }
     );
     $r->exec();
-    ...
+    
+    // 默认情况下不会对外抛出异常，而是将异常对象放在数组中返回。可以通过调用 throwError() 强制直接抛出异常，此时只要有一个任务抛异常则直接对外抛出
+    $rsts = Concurrent::new()->throwError()->addTask(...)->addParams(...)->exec();
   ```
 
 
