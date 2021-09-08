@@ -17,7 +17,11 @@ class JsonResponseParser implements IResponseParser
 
     public function parser(Response $response): Response
     {
-        $response->setBody(json_decode($response->getBody(), true));
+        $result = json_decode($response->getBody(), true);
+        if ($result !== null) {
+            $response->setBody($result);
+        }
+        
         return $response;
     }
 }

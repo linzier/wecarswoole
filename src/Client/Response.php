@@ -6,17 +6,22 @@ use WecarSwoole\ErrCode;
 
 class Response
 {
+    /**
+     * @var array 解析器解析出来的body必须是数组
+     */
     protected $body;
     protected $message;
     protected $status;
     protected $fromRealRequest; // 是否来自真正的请求，还是模拟的
+    protected $url;// 本次请求的url（?前面的）
 
-    public function __construct($body = [], $status = 500, $message = '请求出错', $fromRealRequest = true)
+    public function __construct($body = [], $status = 500, $message = '请求出错', $fromRealRequest = true, $url = '')
     {
         $this->body = $body;
         $this->status = $status;
         $this->message = $message;
         $this->fromRealRequest = $fromRealRequest;
+        $this->url = $url;
     }
 
     public function getMessage()
@@ -50,6 +55,10 @@ class Response
      */
     public function getBody($field = '')
     {
+        if (!is_array($this->body)) {
+            return null;
+        }
+
         if ($field) {
             if (!$this->body) {
                 return null;
@@ -100,6 +109,11 @@ class Response
             return false;
         }
 
+        // 如果body不是数组，则认为失败
+        if ($this->body && !is_array($this->body)) {
+            return false;
+        }
+
         if (!is_array($statusVal)) {
             $statusVal = [$statusVal];
         }
@@ -121,12 +135,18 @@ class Response
             $errorField = [$errorField];
         }
 
+        $prefix = "接口{$this->url}返回:";
         if (!$this->isTransOk()) {
-            return $this->message;
+            return $prefix . $this->message . "($this->status)";
         }
 
         if (!$this->body) {
-            return '接口方未返回任何数据';
+            return $prefix . '未返回任何数据';
+        }
+
+        // 解析后仍然是字符串认为失败
+        if (is_string($this->body)) {
+            return $prefix . mb_substr($this->body, 0, 500);
         }
 
         foreach ($errorField as $field) {

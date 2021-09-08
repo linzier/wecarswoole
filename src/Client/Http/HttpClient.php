@@ -94,16 +94,13 @@ class HttpClient implements IClient
         $saber->withMethod($this->config->method);
 
         // 设置 uri
-        $saber->withUri(
-            new Uri(
-                Url::assemble(
-                    $this->config->path,
-                    $saberConf['base_uri'],
-                    $requestBean->getQueryParams(),
-                    $requestBean->getFlagParams()
-                )
-            )
+        $url = Url::assemble(
+            $this->config->path,
+            $saberConf['base_uri'],
+            $requestBean->getQueryParams(),
+            $requestBean->getFlagParams()
         );
+        $saber->withUri(new Uri($url));
 
         if ($headers = $this->headers($requestBean->headers() ?? [])) {
             $saber->withHeaders($headers);
@@ -140,7 +137,6 @@ class HttpClient implements IClient
         $saber->withBody($buffer);
 
         $this->execMiddlewares('after', $this->config, $saber, $response);
-
         $this->dealBadResponse($response, $requestBean);
 
         // 解析响应数据
@@ -149,7 +145,8 @@ class HttpClient implements IClient
                 $response->getBody()->read($response->getBody()->getSize()),
                 $response->getStatusCode(),
                 $response->getReasonPhrase(),
-                $fromRealRequest
+                $fromRealRequest,
+                explode('?', $url)[0]
             )
         );
     }
