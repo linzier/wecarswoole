@@ -43,8 +43,31 @@ class Response
         $this->status = $status;
     }
 
-    public function getBody()
+    /**
+     * 获取接口返回的业务数据
+     * 支持获取指定的字段，可以用.获取多级字段，如‘data.person.name’表示获取$body['data']['person']['name']的值，如果没有则返回null
+     * 不提供$field则返回整个body
+     */
+    public function getBody($field = '')
     {
+        if ($field) {
+            if (!$this->body) {
+                return null;
+            }
+
+            $field = explode('.', $field);
+            $val = $this->body;
+            foreach ($field as $key) {
+                if (!isset($val[$key])) {
+                    return null;
+                }
+
+                $val = $val[$key];
+            }
+
+            return $val;
+        }
+
         return $this->body;
     }
 
