@@ -55,9 +55,10 @@ class Concurrent
     /**
      * 是否直接向外面抛出异常
      */
-    public function throwError(bool $throw = true)
+    public function throwError(bool $throw = true): Concurrent
     {
         $this->throwError = $throw;
+        return $this;
     }
 
     /**
