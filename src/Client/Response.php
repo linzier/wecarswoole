@@ -2,6 +2,8 @@
 
 namespace WecarSwoole\Client;
 
+use WecarSwoole\ErrCode;
+
 class Response
 {
     protected $body;
@@ -62,6 +64,55 @@ class Response
     public function isTransOk(): bool
     {
         return $this->status >= 200 && $this->status < 300;
+    }
+
+    /**
+     * 业务处理层是否OK
+     * 注意：此方法先检查传输层，如果传输层OK，再检查业务层。业务层依据body里面的$statusField是否等于$statusVal
+     * 其中$statusVal可以是数组或者简单值，如果是数据，则表示目标值只要在其中即OK
+     */
+    public function isBusinessOk(string $statusField = 'status', $statusVal = ErrCode::OK): bool
+    {
+        if (!$this->isTransOk()) {
+            return false;
+        }
+
+        if (!is_array($statusVal)) {
+            $statusVal = [$statusVal];
+        }
+
+        if (!$this->body || !isset($this->body[$statusField]) || !in_array($this->body[$statusField], $statusVal)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * 获取业务层的错误信息
+     * 该方法一般和isBusinessOk配合使用
+     */
+    public function getBusinessError($errorField = ['info', 'msg', 'error', 'message']): string
+    {
+        if (!is_array($errorField)) {
+            $errorField = [$errorField];
+        }
+
+        if (!$this->isTransOk()) {
+            return $this->message;
+        }
+
+        if (!$this->body) {
+            return '接口方未返回任何数据';
+        }
+
+        foreach ($errorField as $field) {
+            if (isset($this->body[$field])) {
+                return $this->body[$field];
+            }
+        }
+
+        return '';
     }
 
     public function __toString()
