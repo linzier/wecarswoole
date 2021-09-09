@@ -157,21 +157,20 @@ class HttpClient implements IClient
      */
     private function dealBadResponse(ResponseInterface $response, IHttpRequestBean $requestBean)
     {
+        $status = $response->getStatusCode();
         // 非 20X 是否需要抛异常
-        if ($this->config->throwException && $response->getStatusCode() >= 300) {
-            $exception = (
-                new APIInvokeException(
+        if ($this->config->throwException && ($status >= 300 || $status < 200)) {
+            $exception = (new APIInvokeException(
                     "接口{$this->config->apiName}调用错误：" . $response->getReasonPhrase(),
                     $response->getStatusCode()
-                )
-            )->withContext(
+                ))->withContext(
                 [
                     'uri' => $requestBean->baseUri(),
                     'params' => $requestBean->getParams()
                 ]
             );
 
-            if ($response->getStatusCode() === 504) {
+            if ($status === 504) {
                 $exception->shouldRetry();
             }
 

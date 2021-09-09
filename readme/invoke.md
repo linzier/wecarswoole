@@ -298,5 +298,21 @@ return [
 
 > 注：实际使用中，一般会将对外部系统的调用封装成服务类（Service），服务类调用具体接口并返回相应的数据（基本数据类型或者自定义类型）。
 
+### 返回对象:
+API类相关方法都是返回`WecarSwoole\Client\Response`，该对象在内部已经通过`IResponseParser::parser(...)`解析过body(IResponseParser将接口提供方的响应数据解析成PHP array)。
+
+`Response`的典型用法：
+```php
+// 带重试机制的调用
+$resp = API::retryInvoke('wecar:order.pay', $params);
+// 调isBusinessOk方法判断是否处理成功。此方法会从HTTP传输层和业务层判断是否成功（方法可指定业务层响应体里面的状态字段和状态码，默认是status和200）
+if (!$resp->isBusinessOk()) {
+    // 如果处理失败，抛出异常（根据具体场景需要），带上错误原因
+    throw new InvokeException($resp->getBusinessError());
+}
+// 通过getBody获取需要的值。该方法支持点号获取深层值，不传参数则表示获取整个body。获取失败返回null
+$tradeNo = $resp->getBody('data.trade_no');
+...
+```
 
 [返回](../README.md)
