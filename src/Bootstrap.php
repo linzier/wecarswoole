@@ -21,11 +21,18 @@ use WecarSwoole\Config\Config as WecarConfig;
  */
 class Bootstrap
 {
+    private static $done = false;
+
     /**
      * @throws \Throwable
      */
     public static function boot()
     {
+        if (self::$done) {
+            return;
+        }
+        self::$done = true;
+
         Runtime::enableCoroutine();
 
         // 加载配置
@@ -37,7 +44,7 @@ class Bootstrap
         // 注册事件订阅者
         static::registerSubscriber();
 
-        // worker 进程健康监测
+        // 进程健康监测
         HealthCheck::watch(Container::get(LoggerInterface::class));
     }
 

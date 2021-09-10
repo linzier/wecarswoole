@@ -19,6 +19,14 @@
             Bootstrap::boot();
             // do something
         }
+     
+        /**
+         * 可在此类增加进程退出前的逻辑
+         */
+        protected function onExit()
+        {
+           // do something
+        }
     }
     ```
 2. 在`EasySwooleEvent::mainServerCreate()`中加入该自定义进程：

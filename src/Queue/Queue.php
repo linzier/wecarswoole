@@ -14,16 +14,25 @@ class Queue
     public static function consumer(string $queueName): Consumer
     {
         if (!isset(self::$map[$queueName])) {
-            self::$map[$queueName] = (new EsQueue(new RedisDriver($queueName)))->consumer();
+            self::$map[$queueName] = new EsQueue(new RedisDriver($queueName));
         }
 
-        return self::$map[$queueName];
+        return self::$map[$queueName]->consumer();
     }
 
     public static function producer(string $queueName): Producer
     {
         if (!isset(self::$map[$queueName])) {
-            self::$map[$queueName] = (new EsQueue(new RedisDriver($queueName)))->producer();
+            self::$map[$queueName] = new EsQueue(new RedisDriver($queueName));
+        }
+
+        return self::$map[$queueName]->producer();
+    }
+
+    public static function queue(string $queueName): ?EsQueue
+    {
+        if (!isset(self::$map[$queueName])) {
+            self::$map[$queueName] = new EsQueue(new RedisDriver($queueName));
         }
 
         return self::$map[$queueName];

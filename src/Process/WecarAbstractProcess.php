@@ -28,11 +28,20 @@ abstract class WecarAbstractProcess extends AbstractProcess
             Process::signal(SIGTERM, null);// 先取消掉该信号处理器
             swoole_event_del($this->swProcess->pipe);// 删除管道上的事件循环
             Timer::getInstance()->clearAll();// 清除定时器
+            $this->onExit();
             Event::exit();// 退出事件循环
             Process::kill($this->getPid(), SIGTERM);// 再发一次SIGTERM终止当前进程
         });
 
         $this->exec($arg);
+    }
+
+    /**
+     * 子类可重写此类增加进程退出前的逻辑
+     */
+    protected function onExit()
+    {
+        // nothing
     }
 
     abstract protected function exec($arg);
