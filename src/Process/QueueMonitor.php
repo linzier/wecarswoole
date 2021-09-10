@@ -90,7 +90,7 @@ class QueueMonitor
             // 计算
             $this->calc();
         } catch (\Exception $e) {
-            Container::get(LoggerInterface::class)->critical("redis 检测错误：{$e->getMessage()}");
+            Container::get(LoggerInterface::class)->critical("队列检测异常：{$e->getMessage()}");
         }
     }
 
