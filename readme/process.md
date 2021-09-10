@@ -19,7 +19,12 @@
     }
     ```
 2. 在`EasySwooleEvent::mainServerCreate()`中加入该自定义进程：
-    `ServerManager::getInstance()->getSwooleServer()->addProcess((new OrderQueueConsumer())->getProcess());`
+    ```php
+    public static function mainServerCreate(EventRegister $register)
+    {
+        ServerManager::getInstance()->getSwooleServer()->addProcess((new OrderQueueConsumer())->getProcess());   
+    }
+    ```
     
     注意：默认自定义进程没有协程化，里面不能直接执行协程函数（如Coroutine::sleep(1))，想要协程化，得这样：
     `ServerManager::getInstance()->getSwooleServer()->addProcess((new OrderQueueConsumer('队列消费者', [], false, 2, true))->getProcess());`
