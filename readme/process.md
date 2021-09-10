@@ -9,11 +9,14 @@
     namespace App\Process;
 
     use WecarSwoole\Process\WecarAbstractProcess;
+    use App\Bootstrap;
 
     class OrderQueueConsumer extends WecarAbstractProcess
     {
         protected function exec($arg)
         {
+            // 执行进程启动初始化脚本
+            Bootstrap::boot();
             // do something
         }
     }
