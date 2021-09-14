@@ -52,7 +52,7 @@ class Logger extends AbstractLogger
      * @param string $loggerName
      * @return Logger
      */
-    public function named(string $loggerName): Logger
+    public static function named(string $loggerName): Logger
     {
         return new self($loggerName);
     }
