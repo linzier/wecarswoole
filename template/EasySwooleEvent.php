@@ -27,7 +27,7 @@ class EasySwooleEvent implements Event
 
     /**
      * @param EventRegister $register
-     * @throws \WecarSwoole\Exceptions\ConfigNotFoundException
+     * @throws \Exception
      */
     public static function mainServerCreate(EventRegister $register)
     {

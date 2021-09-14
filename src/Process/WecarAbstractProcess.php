@@ -6,6 +6,7 @@ use EasySwoole\Component\Process\AbstractProcess;
 use EasySwoole\Component\Timer;
 use Swoole\Event;
 use Swoole\Process;
+use WecarSwoole\Util\File;
 
 /**
  * easyswoole 的AbstractProcess存在bug：对SIGTERM捕获后没有终止当前进程，导致进程无法终止，从而导致整个服务无法被SIGTERM终止
@@ -14,11 +15,19 @@ use Swoole\Process;
 abstract class WecarAbstractProcess extends AbstractProcess
 {
     private $swProcess;
+    protected $flagPrefix;
+    protected $willWriteFlag = true;
 
     public function __start(Process $process)
     {
         $this->swProcess = $process;
         parent::__start($process);
+    }
+
+    public function setFlag(bool $willWriteFlag, string $flagPrefix = '')
+    {
+        $this->willWriteFlag = $willWriteFlag;
+        $this->flagPrefix = $flagPrefix;
     }
 
     public function run($arg)
@@ -33,16 +42,54 @@ abstract class WecarAbstractProcess extends AbstractProcess
             Process::kill($this->getPid(), SIGTERM);// 再发一次SIGTERM终止当前进程
         });
 
+        $this->beforeExec();
         $this->exec($arg);
+        $this->afterExec();
     }
 
-    /**
-     * 子类可重写此类增加进程退出前的逻辑
-     */
-    protected function onExit()
+    public function beforeExec()
     {
-        // nothing
+        $this->writeFlag();
     }
 
     abstract protected function exec($arg);
+
+    public function afterExec()
+    {
+    }
+
+    public function onExit()
+    {
+        $this->clearFlag();
+    }
+
+    private function writeFlag()
+    {
+        if (!$fname = $this->getFlagFileName()) {
+            return;
+        }
+
+        file_put_contents($fname, date('Y-m-d H:i:s'));
+    }
+
+    private function clearFlag()
+    {
+        $fileName = $this->getFlagFileName();
+        if ($fileName && file_exists($fileName)) {
+            unlink($fileName);
+        }
+    }
+
+    private function getFlagFileName(): string
+    {
+        $prefix = $this->flagPrefix ?: $this->getProcessName();
+        if (!$this->willWriteFlag || !$prefix) {
+            return '';
+        }
+
+        $pid = getmypid();
+        $name = $prefix . '-' . $pid;
+
+        return File::join(STORAGE_ROOT, "temp/{$name}.txt");
+    }
 }

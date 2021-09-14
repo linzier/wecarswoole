@@ -3,16 +3,21 @@
 namespace WecarSwoole;
 
 use EasySwoole\EasySwoole\Config;
-use EasySwoole\EasySwoole\Crontab\Crontab;
+use WecarSwoole\Crontab\WecarCrontab;
 use WecarSwoole\Util\File;
 
+/**
+ * 只能在mainServerCreate里面调
+ * Class CronTabUtil
+ * @package WecarSwoole
+ */
 class CronTabUtil
 {
     private static $createdCron = false;
 
     /**
      * 注册定时任务，多台服务器只能有一台注册
-     * @throws \WecarSwoole\Exceptions\ConfigNotFoundException
+     * @throws \Exception
      */
     public static function register()
     {
@@ -22,24 +27,30 @@ class CronTabUtil
 
         Config::getInstance()->loadFile(File::join(CONFIG_ROOT, 'cron.php'), false);
         $conf = Config::getInstance()->getConf('cron');
-        if (!$conf || !$conf['ip'] || !$conf['tasks'] || !self::willRunCrontab($conf)) {
+
+        // 兼容旧版（旧版的crontab服务器ip是在cron.php里面配置的，且需要在此处决定是否要在此服务器创建定时任务）
+        if (isset($conf['ip']) && !self::willRunCrontabOld($conf)) {
             return;
         }
 
         self::$createdCron = true;
 
+        $tasks = $conf['tasks'] ?? $conf;// 新旧格式兼容
         // 添加定时任务
-        foreach ($conf['tasks'] as $cronTab) {
-            Crontab::getInstance()->addTask($cronTab);
+        $crontab = WecarCrontab::getInstance(isset($conf['ip']) ? false : true);
+        foreach ($tasks as $task) {
+            $crontab->addTask($task);
         }
+
+        $crontab->run();
     }
 
     /**
+     * 老版检测，在主进程里面执行
      * @param array $conf
      * @return bool
-     * @throws Exceptions\ConfigNotFoundException
      */
-    public static function willRunCrontab(array $conf): bool
+    public static function willRunCrontabOld(array $conf): bool
     {
         if (!isset($conf['ip']) || !$conf['ip']) {
             return false;
@@ -55,6 +66,20 @@ class CronTabUtil
         if (!$ips || !array_intersect($ips, array_values(swoole_get_local_ip()))) {
             return false;
         }
+        return true;
+    }
+
+    /**
+     * 新版检测，在自定义进程里面执行
+     * @return bool
+     */
+    public static function willRunCrontabNew(): bool
+    {
+        $serverIp = Config::getInstance()->getConf('crontab_server');
+        if (!$serverIp || !in_array($serverIp, swoole_get_local_ip())) {
+            return false;
+        }
+
         return true;
     }
 }

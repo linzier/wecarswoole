@@ -5,7 +5,6 @@ namespace WecarSwoole\Process;
 use App\Bootstrap;
 use Swoole\Timer;
 use EasySwoole\EasySwoole\Config;
-use WecarSwoole\Util\File;
 
 /**
  * 哨兵，主要做各种监控
@@ -53,38 +52,11 @@ class Sentinel extends WecarAbstractProcess
             }
         }
 
-        $this->writeFlag();
-
         foreach ($this->tasks as ['duration' => $duration, 'task' => $task]) {
             if (!is_callable($task)) {
                 continue;
             }
             Timer::tick($duration * 1000, \Closure::fromCallable($task));
         }
-    }
-
-    public function onExit()
-    {
-        $this->clearFlag();
-    }
-
-    private function writeFlag()
-    {
-        file_put_contents($this->getFlagFileName(), date('Y-m-d H:i:s'));
-    }
-
-    private function clearFlag()
-    {
-        $fileName = $this->getFlagFileName();
-        if (file_exists($fileName)) {
-            unlink($fileName);
-        }
-    }
-
-    private function getFlagFileName(): string
-    {
-        $pid = getmypid();
-        $name = $this->getProcessName() ? $this->getProcessName() . '-' . $pid : $pid;
-        return File::join(STORAGE_ROOT, "temp/sentinel-{$name}.txt");
     }
 }
