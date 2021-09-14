@@ -40,3 +40,5 @@
     注意：默认自定义进程没有协程化，里面不能直接执行协程函数（如Coroutine::sleep(1))，想要协程化，得这样：
     `ServerManager::getInstance()->getSwooleServer()->addProcess((new OrderQueueConsumer('队列消费者', [], false, 2, true))->getProcess());`
     其中第五个参数true表示协程化。
+    
+    如果提供了第一个参数（进程名称），则会在storage/temp/下面写入一个"{进程名称-pid}.txt"的文件，正常退出（kill -15)时会删除该文件。

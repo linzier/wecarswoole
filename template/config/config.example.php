@@ -105,6 +105,7 @@ $baseConfig = [
     'base_url' => apollo('application', 'base_url'),
     'sql_log' => apollo('application', 'sql_log') ?: 'off',// 是否开启 SQL 日志（日志级别是info）
     'sentinel_server' => apollo('application', 'sentinel_server') ?: '',// 执行哨兵的服务器
+    'crontab_server' => apollo('application', 'crontab_server') ?: '',// 执行cron定时任务的服务器
 ];
 
 return array_merge(
