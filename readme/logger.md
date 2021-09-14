@@ -91,5 +91,8 @@ use WecarSwoole\Logger;
 ...
 Logger::named('queue-monitor')->info("some message");
 ```
+此信息会记录到 `queue-monitor.log` 中。
+
+命名日志会根据文件大小rotate。
 
 [返回](../README.md)
