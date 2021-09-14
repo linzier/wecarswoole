@@ -92,7 +92,7 @@ abstract class WecarAbstractProcess extends AbstractProcess
         if (!$this->willWriteFlag || !$name) {
             return '';
         }
-        
+
         return File::join(STORAGE_ROOT, "temp/{$name}.txt");
     }
 }

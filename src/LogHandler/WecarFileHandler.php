@@ -101,11 +101,8 @@ class WecarFileHandler extends StreamHandler
     protected function rotateFileSize()
     {
         // 将当前文件改名
-        // 先忽略掉错误
-        set_error_handler(function ($errno, $errstr, $errfile, $errline) {});
         rename($this->url, $this->url . "." . date('YmdHis'));
         clearstatcache();
-        restore_error_handler();
     }
 
     protected function rotateDate()
