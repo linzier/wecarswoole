@@ -2,7 +2,6 @@
 
 namespace WecarSwoole\Process;
 
-use App\Bootstrap;
 use Swoole\Timer;
 use EasySwoole\EasySwoole\Config;
 
@@ -61,8 +60,6 @@ class Sentinel extends WecarAbstractProcess
         if (!$this->canRun) {
             return;
         }
-
-        Bootstrap::boot();
 
         foreach ($this->tasks as ['duration' => $duration, 'task' => $task]) {
             if (!is_callable($task)) {

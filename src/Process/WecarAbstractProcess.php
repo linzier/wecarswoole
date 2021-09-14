@@ -2,6 +2,7 @@
 
 namespace WecarSwoole\Process;
 
+use WecarSwoole\Bootstrap;
 use EasySwoole\Component\Process\AbstractProcess;
 use EasySwoole\Component\Timer;
 use Swoole\Event;
@@ -30,6 +31,10 @@ abstract class WecarAbstractProcess extends AbstractProcess
         $this->flagPrefix = $flagPrefix;
     }
 
+    /**
+     * @param $arg
+     * @throws \Throwable
+     */
     public function run($arg)
     {
         // 覆盖掉 AbstractProcess 中的事件注册
@@ -42,6 +47,7 @@ abstract class WecarAbstractProcess extends AbstractProcess
             Process::kill($this->getPid(), SIGTERM);// 再发一次SIGTERM终止当前进程
         });
 
+        Bootstrap::boot();
         $this->beforeExec();
         $this->exec($arg);
         $this->afterExec();
