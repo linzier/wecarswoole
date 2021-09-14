@@ -58,11 +58,11 @@ class EasySwooleEvent implements Event
             ExitHandler::exec($server, $workerId);
         });
 
+        // Apollo 配置变更监听程序
+        ServerManager::getInstance()->getSwooleServer()->addProcess((new ApolloWatcher('apollo-watcher'))->getProcess());
+
         // 定时任务
         CronTabUtil::register();
-
-        // Apollo 配置变更监听程序
-        ServerManager::getInstance()->getSwooleServer()->addProcess((new ApolloWatcher())->getProcess());
     }
 
     /**
