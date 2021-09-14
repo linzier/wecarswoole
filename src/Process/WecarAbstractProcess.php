@@ -88,14 +88,11 @@ abstract class WecarAbstractProcess extends AbstractProcess
 
     private function getFlagFileName(): string
     {
-        $prefix = $this->flagPrefix ?: $this->getProcessName();
-        if (!$this->willWriteFlag || !$prefix) {
+        $name = $this->flagPrefix ?: $this->getProcessName();
+        if (!$this->willWriteFlag || !$name) {
             return '';
         }
-
-        $pid = getmypid();
-        $name = $prefix . '-' . $pid;
-
+        
         return File::join(STORAGE_ROOT, "temp/{$name}.txt");
     }
 }

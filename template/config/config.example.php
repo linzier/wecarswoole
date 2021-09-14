@@ -2,6 +2,7 @@
 
 use function WecarSwoole\Config\apollo;
 use WecarSwoole\Util\File;
+use WecarSwoole\LogHandler\WecarFileHandler;
 
 $baseConfig = [
     'app_name' => '用户系统',
@@ -106,6 +107,7 @@ $baseConfig = [
     'sql_log' => apollo('application', 'sql_log') ?: 'off',// 是否开启 SQL 日志（日志级别是info）
     'sentinel_server' => apollo('application', 'sentinel_server') ?: '',// 执行哨兵的服务器
     'crontab_server' => apollo('application', 'crontab_server') ?: '',// 执行cron定时任务的服务器
+    'max_log_file_size' => apollo('application', 'max_log_file_size') ?: WecarFileHandler::DEFAULT_FILE_SIZE,
 ];
 
 return array_merge(
