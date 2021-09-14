@@ -17,6 +17,7 @@ class Sentinel extends WecarAbstractProcess
 {
     private $tasks = [];
     private $onlyOnMaster = true;
+    private $canRun = true;
 
     public function onlyOnMaster(bool $onoff = true): Sentinel
     {
@@ -36,21 +37,32 @@ class Sentinel extends WecarAbstractProcess
         return $this;
     }
 
+    public function beforeExec()
+    {
+        if ($this->onlyOnMaster) {
+            $masterIp = Config::getInstance()->getConf('sentinel_server');
+            if (!$masterIp || !in_array($masterIp, swoole_get_local_ip())) {
+                $this->canRun = false;
+                $this->willWriteFlag = false;
+                echo "sentinel {$this->getProcessName()} not run:not master\n";
+                return;
+            }
+        }
+
+        parent::beforeExec();
+    }
+
     /**
      * @param $arg
      * @throws \Throwable
      */
     protected function exec($arg)
     {
-        Bootstrap::boot();
-
-        if ($this->onlyOnMaster) {
-            $masterIp = Config::getInstance()->getConf('sentinel_server');
-            if (!$masterIp || !in_array($masterIp, swoole_get_local_ip())) {
-                echo "sentinel {$this->getProcessName()} not run:not master\n";
-                return;
-            }
+        if (!$this->canRun) {
+            return;
         }
+
+        Bootstrap::boot();
 
         foreach ($this->tasks as ['duration' => $duration, 'task' => $task]) {
             if (!is_callable($task)) {
