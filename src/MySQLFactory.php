@@ -64,7 +64,7 @@ class MySQLFactory
             $config['user'],
             $config['password'],
             $config['database'],
-            $config['port'] ?? 3306,
+            isset($config['port']) ? intval($config['port']) : 3306,
             $config['timeout'] ?? 3,
             $config['charset'] ?? 'utf8'
         );
