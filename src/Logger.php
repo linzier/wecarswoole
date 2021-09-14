@@ -7,6 +7,7 @@ use EasySwoole\Component\Singleton;
 use EasySwoole\EasySwoole\ServerManager;
 use Monolog\Handler\RotatingFileHandler;
 use WecarSwoole\LogHandler\SmSHandler;
+use WecarSwoole\LogHandler\WecarFileHandler;
 use WecarSwoole\Tasks\Log;
 use EasySwoole\EasySwoole\Config;
 use EasySwoole\EasySwoole\Swoole\Task\TaskManager;
@@ -82,6 +83,11 @@ class Logger extends AbstractLogger
         return $logger;
     }
 
+    /**
+     * @param $minLevel
+     * @return array
+     * @throws \Exception
+     */
     private static function handlers($minLevel): array
     {
         if ($minLevel == 'off') {
@@ -117,7 +123,15 @@ class Logger extends AbstractLogger
             foreach ($config as $handleType => $val) {
                 switch ($handleType) {
                     case 'file':
-                        $handle = new RotatingFileHandler($val, 0, $levelNum, true, null, true);
+                        $handle = new WecarFileHandler(
+                            $val,
+                            WecarFileHandler::RT_DATE_SIZE,
+                            Config::getInstance()->getConf('max_log_file_size') ?: WecarFileHandler::DEFAULT_FILE_SIZE,
+                            $levelNum,
+                            true,
+                            null,
+                            true
+                        );
                         break;
                     case 'mailer':
                     case 'email':
