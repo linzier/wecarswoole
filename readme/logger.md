@@ -70,5 +70,26 @@
 >
 > 在项目中抛出 CriticalErrorException 会记录 critical 级别日志，抛出 EmergencyErrorException 会记录 emergency 级别日志。
 
+### rotate：
+默认根据日期和文件大小切割文件。文件大小可在 config.php 中配置（不配置则使用默认值400M）：
+```php
+'max_log_file_size' => apollo('application', 'max_log_file_size') ?: WecarFileHandler::DEFAULT_FILE_SIZE,
+```
+
+根据大小切割的日志会用date('YmdHis')作为后缀，如 `error-2021-09-14.log.20210914224111`。
+
+注意：系统不会自动删除过往的日志，需要运维用系统的logrotate去处理。
+
+### 命名日志：
+像定时任务、监控进程的日志，如果采用上面的方式记录日志的话，日志内容会和普通业务日志一起淹没在海量信息中，不好找，因此框架提供了"命名日志"来记录此类日志信息。
+使用：
+```php
+<?php
+
+use WecarSwoole\Logger;
+
+...
+Logger::named('queue-monitor')->info("some message");
+```
 
 [返回](../README.md)
