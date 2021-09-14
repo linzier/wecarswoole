@@ -3,7 +3,7 @@ Wecarswoole 基于 easyswoole/queue 组件实现了队列，使用 redis 实现�
 
 ### 使用：
 - 入列：
-    ```
+    ```php
     use EasySwoole\Queue\Job;
     ...
     $job = new Job();
@@ -11,7 +11,7 @@ Wecarswoole 基于 easyswoole/queue 组件实现了队列，使用 redis 实现�
     Queue::producer($queueName)->push($job);
     ```
 - 出列（监听）：
-  ```
+  ```php
   // 在 EasySwooleEvent 类中：
   class EasySwooleEvent implements Event
   {
