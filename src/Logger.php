@@ -5,7 +5,6 @@ namespace WecarSwoole;
 use EasySwoole\Component\Context\ContextManager;
 use EasySwoole\Component\Singleton;
 use EasySwoole\EasySwoole\ServerManager;
-use Monolog\Handler\RotatingFileHandler;
 use WecarSwoole\LogHandler\SmSHandler;
 use WecarSwoole\LogHandler\WecarFileHandler;
 use WecarSwoole\Tasks\Log;
@@ -16,6 +15,7 @@ use Psr\Log\AbstractLogger;
 use Monolog\Logger as MonoLogger;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SwiftMailerHandler;
+use WecarSwoole\Util\File;
 
 /**
  * 日志
@@ -37,13 +37,30 @@ class Logger extends AbstractLogger
         'EMERGENCY' => MonoLogger::EMERGENCY,
     ];
 
-    protected function __construct()
-    { }
+    protected const DEFAULT_LOGGER_NAME = '__default';
+
+    protected $loggerName;
+    protected static $loggerObj = [];
+
+    protected function __construct(string $loggerName = self::DEFAULT_LOGGER_NAME)
+    {
+        $this->loggerName = $loggerName;
+    }
+
+    /**
+     *
+     * @param string $loggerName
+     * @return Logger
+     */
+    public function named(string $loggerName): Logger
+    {
+        return new self($loggerName);
+    }
 
     public function log($level, $message, array $context = array())
     {
         $server = ServerManager::getInstance()->getSwooleServer();
-        $log = new Log(['level' => $level, 'message' => $this->wrapMessage($message), 'context' => $context]);
+        $log = new Log(['level' => $level, 'message' => $this->wrapMessage($message), 'context' => $context, 'name' => $this->loggerName]);
         // 如果在工作进程中，则投递异步任务，否则直接执行（task进程不能投递异步任务）
         if (!$server->taskworker) {
             TaskManager::async($log);
@@ -64,23 +81,64 @@ class Logger extends AbstractLogger
 
     /**
      * Monolog 工厂方法
+     * @param string $loggerName
      * @return MonoLogger
+     * @throws \Exception
      */
-    public static function getMonoLogger()
+    public static function getMonoLogger(string $loggerName)
     {
-        $minLevel = Config::getInstance()->getConf('log_level') ?? 'error';
+        if (isset(self::$loggerObj[$loggerName])) {
+            return self::$loggerObj[$loggerName];
+        }
 
+        $minLevel = Config::getInstance()->getConf('log_level') ?? 'error';
         if ($minLevel !== 'off' && !array_key_exists(strtoupper($minLevel), self::$levels)) {
             $minLevel = 'error';
         }
 
         $logger = new MonoLogger(Config::getInstance()->getConf('app_flag') ?? 'app');
 
-        foreach (self::handlers($minLevel) as $handler) {
+        $handlers = $loggerName == self::DEFAULT_LOGGER_NAME ? self::handlers($minLevel) : self::namedHandlers($minLevel, $loggerName);
+        foreach ($handlers as $handler) {
             $logger->pushHandler($handler);
         }
 
+        self::$loggerObj[$loggerName] = $logger;
+
         return $logger;
+    }
+
+    /**
+     * @param string $minLevel
+     * @param string $name
+     * @return array
+     * @throws \Exception
+     */
+    private static function namedHandlers(string $minLevel, string $name): array
+    {
+        if ($minLevel == 'off') {
+            return [new NullHandler(MonoLogger::DEBUG)];
+        }
+
+        $handles = [];
+
+        $fileName = File::join(STORAGE_ROOT, "logs/{$name}.log");
+        $handles[] = new WecarFileHandler(
+            $fileName,
+            WecarFileHandler::RT_SIZE,
+            Config::getInstance()->getConf('max_log_file_size') ?: WecarFileHandler::DEFAULT_FILE_SIZE,
+            self::$levels[strtoupper($minLevel)],
+            true,
+            null,
+            true
+        );
+
+        // 如果是命令行调试模式，则增加 StreamHandler
+        if (DEBUG_MODEL) {
+            $handles[] = new StreamHandler(STDOUT);
+        }
+
+        return $handles;
     }
 
     /**

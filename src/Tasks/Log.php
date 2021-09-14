@@ -18,6 +18,7 @@ class Log extends AbstractAsyncTask
      * @param $fromWorkerId
      * @param null $flags
      * @return mixed
+     * @throws \Exception
      */
     protected function run($taskData, $taskId, $fromWorkerId, $flags = null)
     {
@@ -25,7 +26,9 @@ class Log extends AbstractAsyncTask
             return false;
         }
 
-        return Logger::getMonoLogger()->log($taskData['level'], $taskData['message'], $taskData['context'] ?? []);
+        $loggerName = $taskData['name'] ?: '__default';
+
+        return Logger::getMonoLogger($loggerName)->log($taskData['level'], $taskData['message'], $taskData['context'] ?? []);
     }
 
     protected function finish($result, $task_id)
