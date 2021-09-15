@@ -19,6 +19,11 @@ abstract class WecarAbstractProcess extends AbstractProcess
     protected $flagPrefix;
     protected $willWriteFlag = true;
 
+    public function __construct($processName = '', $arg = null, $redirectStdinStdout = false, $pipeType = 2, $enableCoroutine = true)
+    {
+        parent::__construct($processName, $arg, $redirectStdinStdout, $pipeType, $enableCoroutine);
+    }
+
     public function __start(Process $process)
     {
         $this->swProcess = $process;
@@ -42,8 +47,8 @@ abstract class WecarAbstractProcess extends AbstractProcess
             Process::signal(SIGTERM, null);// 先取消掉该信号处理器
             swoole_event_del($this->swProcess->pipe);// 删除管道上的事件循环
             Timer::getInstance()->clearAll();// 清除定时器
-            $this->onExit();
             Event::exit();// 退出事件循环
+            $this->onExit();
             Process::kill($this->getPid(), SIGTERM);// 再发一次SIGTERM终止当前进程
         });
 
@@ -53,18 +58,18 @@ abstract class WecarAbstractProcess extends AbstractProcess
         $this->afterExec();
     }
 
-    public function beforeExec()
+    protected function beforeExec()
     {
         $this->writeFlag();
     }
 
     abstract protected function exec($arg);
 
-    public function afterExec()
+    protected function afterExec()
     {
     }
 
-    public function onExit()
+    protected function onExit()
     {
         $this->clearFlag();
     }
