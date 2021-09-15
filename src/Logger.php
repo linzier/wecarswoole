@@ -130,7 +130,7 @@ class Logger extends AbstractLogger
             self::$levels[strtoupper($minLevel)],
             true,
             null,
-            true
+            false
         );
 
         // 如果是命令行调试模式，则增加 StreamHandler
@@ -188,7 +188,7 @@ class Logger extends AbstractLogger
                             $levelNum,
                             true,
                             null,
-                            true
+                            false
                         );
                         break;
                     case 'mailer':
