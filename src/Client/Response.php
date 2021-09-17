@@ -52,6 +52,8 @@ class Response
      * 获取接口返回的业务数据
      * 支持获取指定的字段，可以用.获取多级字段，如‘data.person.name’表示获取$body['data']['person']['name']的值，如果没有则返回null
      * 不提供$field则返回整个body
+     * @param string $field
+     * @return array|mixed|null
      */
     public function getBody($field = '')
     {
@@ -91,6 +93,7 @@ class Response
     }
 
     /**
+     * @return bool
      * @var bool 网络传输层是否 ok
      */
     public function isTransOk(): bool
@@ -99,9 +102,26 @@ class Response
     }
 
     /**
+     * 是否网络超时
+     * @return bool
+     */
+    public function isTimeout(): bool
+    {
+        if ($this->isTransOk()) {
+            return false;
+        }
+
+        return in_array($this->status, [408, 504, -1, -2]);
+    }
+
+    /**
      * 业务处理层是否OK
      * 注意：此方法先检查传输层，如果传输层OK，再检查业务层。业务层依据body里面的$statusField是否等于$statusVal
-     * 其中$statusVal可以是数组或者简单值，如果是数据，则表示目标值只要在其中即OK
+     * 其中$statusVal可以是数组或者简单值，如果是数据，则表示目标值只要在其中即OK，
+     * 数组中可以用 min、max表示范围，如 ['min' => 200, 'max' => 299] 表示状态值在 200 到 299 之间（左右都包含）就 OK
+     * @param string $statusField
+     * @param int $statusVal
+     * @return bool
      */
     public function isBusinessOk(string $statusField = 'status', $statusVal = ErrCode::OK): bool
     {
@@ -118,7 +138,7 @@ class Response
             $statusVal = [$statusVal];
         }
 
-        if (!$this->body || !isset($this->body[$statusField]) || !in_array($this->body[$statusField], $statusVal)) {
+        if (!$this->body || !isset($this->body[$statusField]) || !$this->bodyStatusOk($this->body[$statusField], $statusVal)) {
             return false;
         }
 
@@ -128,6 +148,8 @@ class Response
     /**
      * 获取业务层的错误信息
      * 该方法一般和isBusinessOk配合使用
+     * @param array $errorField
+     * @return string
      */
     public function getBusinessError($errorField = ['info', 'msg', 'error', 'message']): string
     {
@@ -156,6 +178,16 @@ class Response
         }
 
         return '';
+    }
+
+    private function bodyStatusOk($val, array $statusArr): bool
+    {
+        if (isset($statusArr['min']) && isset($statusArr['max'])) {
+            // 表示范围
+            return $val >= $statusArr['min'] && $val <= $statusArr['max'];
+        }
+
+        return in_array($val, $statusArr);
     }
 
     public function __toString()
