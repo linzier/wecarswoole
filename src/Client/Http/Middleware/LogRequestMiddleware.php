@@ -62,8 +62,6 @@ class LogRequestMiddleware implements IRequestMiddleware
         $buff->write($responseBody);
         $response->withBody($buff);
 
-        $responseBody = mb_strlen($responseBody) > 1024 * 400 ? mb_strcut($responseBody, 0, 1024 * 400) : $responseBody;
-
         $requestBody = $request->getBody()->getContents();
         // buffer 重新写入供后面用
         $buff = new BufferStream(strlen($requestBody));
@@ -74,13 +72,12 @@ class LogRequestMiddleware implements IRequestMiddleware
             'use_time' => time() - $this->startTime,
             'request' => [
                 'url' => strval($request->getUri()),
-                'body' => $requestBody
+                'body' => json_decode($requestBody, true) ?? $requestBody,
             ],
             'response' => [
                 'http_code' => $response->getStatusCode(),
                 'reason' => $response->getReasonPhrase(),
-                'headers' => $response->getHeaders(),
-                'body' => $responseBody,
+                'body' => json_decode($responseBody, true) ?? $responseBody,
             ]
         ];
     }

@@ -2,6 +2,7 @@
 
 namespace WecarSwoole\Client\Contract;
 
+use Psr\Http\Message\ResponseInterface;
 use WecarSwoole\Client\Response;
 
 /**
@@ -12,5 +13,5 @@ use WecarSwoole\Client\Response;
  */
 interface IResponseParser
 {
-    public function parser(Response $response): Response;
+    public function parser(string $url, ResponseInterface $response, bool $isRealRequest): Response;
 }

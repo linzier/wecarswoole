@@ -139,16 +139,7 @@ class HttpClient implements IClient
         $this->execMiddlewares('after', $this->config, $saber, $response);
         $this->dealBadResponse($response, $requestBean);
 
-        // 解析响应数据
-        return $this->responseParser->parser(
-            new Response(
-                $response->getBody()->read($response->getBody()->getSize()),
-                $response->getStatusCode(),
-                $response->getReasonPhrase(),
-                $fromRealRequest,
-                explode('?', $url)[0]
-            )
-        );
+        return $this->responseParser->parser(explode('?', $url)[0], $response, $fromRealRequest);
     }
 
     /**
