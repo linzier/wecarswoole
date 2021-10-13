@@ -8,9 +8,7 @@ use WecarSwoole\Container;
 use WecarSwoole\ErrCode;
 use WecarSwoole\RedisFactory;
 use WecarSwoole\Middleware\MiddlewareHelper;
-use WecarSwoole\Exceptions\{
-    EmergencyErrorException, CriticalErrorException, Exception
-};
+use WecarSwoole\Exceptions\{EmergencyErrorException, CriticalErrorException, Exception, ValidateException};
 use WecarSwoole\Http\Middlewares\{LockerMiddleware, RequestRecordMiddleware, RequestTimeMiddleware, ValidateMiddleware};
 use Dev\MySQL\Exception\DBException;
 use EasySwoole\Validate\Validate;
@@ -179,7 +177,8 @@ class Controller extends EsController
             $logger->critical($message, $context);
         } elseif ($throwable instanceof EmergencyErrorException) {
             $logger->emergency($message, $context);
-        } else {
+        } elseif (!$throwable instanceof ValidateException) {
+            // 参数校验错误不记录日志
             $logger->error($message, $context);
         }
 
