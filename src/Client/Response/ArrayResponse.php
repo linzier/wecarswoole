@@ -107,7 +107,7 @@ abstract class ArrayResponse extends Response
             return $prefix . $this->message . "($this->status)。";
         }
 
-        if (!$this->body && $this->message) {
+        if (!$this->body) {
             return $prefix . $this->message . '。';
         }
 
