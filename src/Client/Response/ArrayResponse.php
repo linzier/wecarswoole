@@ -21,9 +21,7 @@ abstract class ArrayResponse extends Response
         if ($decbody === null) {
             // 解析失败
             $this->body = [];
-            if ($body) {
-                $this->message = !$this->isTransOk() && $this->message ? $this->message . ',body str:' . $body : $body;
-            }
+            $this->message = !$this->isTransOk() && $this->message ? $this->message . ',body str:' . $body : $body;
         } else {
             $this->body = $decbody;
         }
@@ -106,11 +104,11 @@ abstract class ArrayResponse extends Response
 
         $prefix = "接口{$this->url}返回:";
         if (!$this->isTransOk()) {
-            return $prefix . $this->message . "($this->status)";
+            return $prefix . $this->message . "($this->status)。";
         }
 
         if (!$this->body && $this->message) {
-            return $prefix . $this->message;
+            return $prefix . $this->message . '。';
         }
 
         foreach ($errorField as $field) {
