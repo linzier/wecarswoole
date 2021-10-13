@@ -61,10 +61,13 @@ class RequestRecordMiddleware implements IControllerMiddleware
             return $next($request, $response);
         }
 
+        $respVal = (string)$response->getBody();
+        $respVal = json_decode($respVal, true) ?? $respVal;
+
         $uri = $request->getUri()->getPath() . '?' . $request->getUri()->getQuery();
         $context = [
             'params' => $request->getRequestParam(),
-            'response' => (string)$response->getBody(),
+            'response' => $respVal,
             'from' => $request->getServerParams()['remote_addr'],
             'use_time' => time() - $this->startTime
         ];
