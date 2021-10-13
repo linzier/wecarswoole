@@ -35,6 +35,8 @@ $baseConfig = [
         // 记录哪些请求类型的日志
         'methods' => explode(',', apollo('application', 'request_log.methods'))
     ],
+    // api调用日志（本系统调别的系统的日志）
+    'api_invoke_log' => apollo('application', 'api_invoke_log') ?: 'on',
     /**
      * 数据库配置建议以数据库名作为 key
      * 如果没有读写分离，则可不分 read, write，直接在里面写配置信息
