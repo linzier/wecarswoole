@@ -22,7 +22,7 @@ abstract class ArrayResponse extends Response
             // 解析失败
             $this->body = [];
             if ($body) {
-                $this->message = $this->message ? $this->message . ',body str:' . $body : $body;
+                $this->message = !$this->isTransOk() && $this->message ? $this->message . ',body str:' . $body : $body;
             }
         } else {
             $this->body = $decbody;
