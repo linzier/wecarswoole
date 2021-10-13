@@ -1,8 +1,8 @@
 <?php
 
-namespace WecarSwoole\Client\Respone;
+namespace WecarSwoole\Client\Response;
 
-class JsonArrayRespone extends ArrayResponse
+class JsonArrayResponse extends ArrayResponse
 {
     protected function decodeBody(string $origBody)
     {

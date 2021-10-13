@@ -1,6 +1,6 @@
 <?php
 
-namespace WecarSwoole\Client\Respone;
+namespace WecarSwoole\Client\Response;
 
 use WecarSwoole\ErrCode;
 use WecarSwoole\Client\Response;

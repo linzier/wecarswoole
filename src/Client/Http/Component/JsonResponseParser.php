@@ -5,7 +5,7 @@ namespace WecarSwoole\Client\Http\Component;
 use Psr\Http\Message\ResponseInterface;
 use WecarSwoole\Client\Config\Config;
 use WecarSwoole\Client\Contract\IResponseParser;
-use WecarSwoole\Client\Respone\JsonArrayRespone;
+use WecarSwoole\Client\Response\JsonArrayResponse;
 use WecarSwoole\Client\Response;
 
 class JsonResponseParser implements IResponseParser
@@ -19,7 +19,7 @@ class JsonResponseParser implements IResponseParser
 
     public function parser(string $url, ResponseInterface $response, bool $isRealRequest): Response
     {
-        return new JsonArrayRespone(
+        return new JsonArrayResponse(
             $response->getBody()->read($response->getBody()->getSize()),
             $response->getStatusCode(),
             $response->getReasonPhrase(),
