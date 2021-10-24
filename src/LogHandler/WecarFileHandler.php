@@ -45,7 +45,7 @@ class WecarFileHandler extends StreamHandler
         $level = Logger::DEBUG,
         $bubble = true,
         $filePermission = null,
-        $useLocking = false
+        $useLocking = true
     ) {
         $this->filename = $filename;
         $this->rotateType = $rotateType;
