@@ -42,15 +42,8 @@ abstract class WecarAbstractProcess extends AbstractProcess
      */
     public function run($arg)
     {
-        // 覆盖掉 AbstractProcess 中的事件注册
-        Process::signal(SIGTERM, function () {
-            Process::signal(SIGTERM, null);// 先取消掉该信号处理器
-            swoole_event_del($this->swProcess->pipe);// 删除管道上的事件循环
-            Timer::getInstance()->clearAll();// 清除定时器
-            Event::exit();// 退出事件循环
-            $this->onExit();
-            Process::kill($this->getPid(), SIGTERM);// 再发一次SIGTERM终止当前进程
-        });
+        Process::signal(SIGTERM, \Closure::fromCallable([$this, 'signalHandle']));
+        Process::signal(SIGINT, \Closure::fromCallable([$this, 'signalHandle']));
 
         Bootstrap::boot();
         $this->beforeExec();
@@ -69,6 +62,23 @@ abstract class WecarAbstractProcess extends AbstractProcess
     {
     }
 
+    /**
+     * 处理终止信号
+     * @param $signo
+     */
+    protected function signalHandle($signo) {
+        if ($signo != SIGTERM && $signo != SIGINT) {
+            return;
+        }
+
+        Process::signal($signo, null);// 先取消掉该信号处理器
+        swoole_event_del($this->swProcess->pipe);// 删除管道上的事件循环
+        Timer::getInstance()->clearAll();// 清除定时器
+        Event::exit();// 退出事件循环
+        $this->onExit();
+        Process::kill(getmypid(), $signo);// 再发一次，退出进程（不能用exit，否则swoole报错）
+    }
+
     protected function onExit()
     {
         $this->clearFlag();
@@ -80,7 +90,7 @@ abstract class WecarAbstractProcess extends AbstractProcess
             return;
         }
 
-        file_put_contents($fname, date('Y-m-d H:i:s'));
+        file_put_contents($fname, "pid:" . getmypid() . ",time:" . date('Y-m-d H:i:s'));
     }
 
     private function clearFlag()
