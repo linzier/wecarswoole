@@ -16,15 +16,21 @@
 use WecarSwoole\Transaction;
 ...
 
+// 创建两个仓储
 $repos1 = Container::get(IUserRepository::class);
 $repos2 = Container::get(IMerchantRepository::class);
 
+开启事务（同时将这两个仓储加到事务中）
 $trans = Transaction::begin([$repos1, $repos2]);
-$res1 = $repos1->add(new User('13909094444'));
-$res2 = $repos2->add(new Merchant(29090, 1));
 
 // 中间可以用 $trans->add($newRepos) 添加新仓储到事务中
 
+// 执行各个仓储的方法
+// 在执行每个仓储的方法后可以立即判断是否成功，如果失败则立即回滚，就不用再执行后面仓储的方法了
+$res1 = $repos1->add(new User('13909094444'));
+$res2 = $repos2->add(new Merchant(29090, 1));
+
+// 提交或回滚
 if ($res1 && $res2) {
     $trans->commit();
 } else {
