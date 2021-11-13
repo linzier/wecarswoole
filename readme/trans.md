@@ -21,7 +21,7 @@ $repos1 = Container::get(IUserRepository::class);
 $repos2 = Container::get(IMerchantRepository::class);
 
 // 开启事务（同时将这两个仓储加到事务中）
-$trans = Transaction::begin([$repos1, $repos2]);
+$trans = Transaction::begin($repos1, $repos2);
 
 // 中间可以用 $trans->add($newRepos) 添加新仓储到事务中
 
