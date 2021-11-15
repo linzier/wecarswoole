@@ -14,5 +14,8 @@ namespace PHPSTORM_META
         \WecarSwoole\Container::make('', $params = []) => [
             "" == "@",
         ],
+        \WecarSwoole\LazyProxy\proxy('', ...) => [
+            "" == "@",
+        ]
     ];
 }

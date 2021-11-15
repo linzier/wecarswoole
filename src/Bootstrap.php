@@ -13,8 +13,8 @@ use WecarSwoole\Util\File;
 use WecarSwoole\Config\Config as WecarConfig;
 
 /**
- * worker 进程启动脚本
- * 没当 work/task 进程启动时，执行此脚本的 boot 方法
+ * 进程启动脚本
+ * 每进程启动时，执行此脚本的 boot 方法
  * 也可以在自定义进程中执行此方法，让自定义进程上下文和 Worker 进程相同
  * Class Bootstrap
  * @package WecarSwoole
@@ -24,6 +24,7 @@ class Bootstrap
     private static $done = false;
 
     /**
+     * 启动脚本
      * @throws \Throwable
      */
     public static function boot()
@@ -44,8 +45,43 @@ class Bootstrap
         // 注册事件订阅者
         static::registerSubscriber();
 
+        // 加载助手函数
+        self::loadFunctions();
+
         // 进程健康监测
         HealthCheck::watch(Container::get(LoggerInterface::class));
+    }
+
+    /**
+     * 供测试用
+     * @throws \Throwable
+     */
+    public static function bootForTest()
+    {
+        if (self::$done) {
+            return;
+        }
+        self::$done = true;
+
+        // 加载配置
+        static::loadConfig();
+
+        // 注册 DI
+        static::registerDI();
+
+        // 注册事件订阅者
+        static::registerSubscriber();
+
+        // 加载助手函数
+        self::loadFunctions();
+    }
+
+    protected static function loadFunctions()
+    {
+        // 延迟加载函数
+        if (!function_exists('\WecarSwoole\LazyProxy\proxy')) {
+            require_once __DIR__ . '/LazyProxy/proxy.php';
+        }
     }
 
     protected static function loadConfig()
