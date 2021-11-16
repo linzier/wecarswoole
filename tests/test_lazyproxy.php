@@ -1,72 +1,70 @@
 <?php
 
-use function WecarSwoole\LazyProxy\proxy;
+use WecarSwoole\LazyProxy\Proxy;
 
 require_once './base.php';
 
-\WecarSwoole\Bootstrap::bootForTest();
+//class HeaveClass
+//{
+//    public $age;
+//    public $time;
+//    protected $love;
+//
+//    public function __construct(int $age)
+//    {
+//        echo "create class\n";
+//        $this->age = $age;
+//        $this->time = time();
+//        // 动态设置属性
+//        $this->something = "some other\n";
+//        $this->love = '篮球';
+//    }
+//
+//    public function getAge(): int
+//    {
+//        return $this->age;
+//    }
+//
+//    protected function say($words)
+//    {
+//        echo "say $words {$this->love}\n";
+//    }
+//
+//    public function __call($name, $arguments)
+//    {
+//        if (method_exists($this, $name)) {
+//            return $this->{$name}(...$arguments);
+//        }
+//    }
+//
+//    public function __get($name)
+//    {
+//        return $this->$name;
+//    }
+//
+//    public function __set($name, $value)
+//    {
+//        $this->$name = $value;
+//    }
+//
+//    public function __isset($name)
+//    {
+//        return isset($this->$name);
+//    }
+//
+//    public function __unset($name)
+//    {
+//        unset($this->$name);
+//    }
+//}
+//
+//function createHeaveClass(int $age)
+//{
+//    return new HeaveClass($age);
+//}
 
-class HeaveClass
-{
-    public $age;
-    public $time;
-    protected $love;
-
-    public function __construct(int $age)
-    {
-        echo "create class\n";
-        $this->age = $age;
-        $this->time = time();
-        // 动态设置属性
-        $this->something = "some other\n";
-        $this->love = '篮球';
-    }
-
-    public function getAge(): int
-    {
-        return $this->age;
-    }
-
-    protected function say($words)
-    {
-        echo "say $words {$this->love}\n";
-    }
-
-    public function __call($name, $arguments)
-    {
-        if (method_exists($this, $name)) {
-            return $this->{$name}(...$arguments);
-        }
-    }
-
-    public function __get($name)
-    {
-        return $this->$name;
-    }
-
-    public function __set($name, $value)
-    {
-        $this->$name = $value;
-    }
-
-    public function __isset($name)
-    {
-        return isset($this->$name);
-    }
-
-    public function __unset($name)
-    {
-        unset($this->$name);
-    }
-}
-
-function createHeaveClass(int $age)
-{
-    return new HeaveClass($age);
-}
-
-$a = proxy(HeaveClass::class, 'createHeaveClass', [23], false, true);
-$a2 = proxy(HeaveClass::class, 'createHeaveClass', [45]);
+//$a = proxy(HeaveClass::class, 'createHeaveClass', [23], false, true);
+//$a2 = proxy(HeaveClass::class, 'createHeaveClass', [45]);
 //echo "age:",$a->age,"\n";
 //echo "age2:",$a2->age,"\n";
 //echo "time:",$a->time,"\n";
@@ -91,3 +89,93 @@ $a2 = proxy(HeaveClass::class, 'createHeaveClass', [45]);
 //$a->love = "滑冰";
 //echo "after a love:", $a->love,"\n";
 //echo "after ca love:", $ca->love,"\n";
+
+
+class HeavyEntity implements \WecarSwoole\LazyProxy\Identifiable
+{
+    private $id;
+    private $age;
+    protected $name;
+    public $love;
+
+    public function __construct($id)
+    {
+        echo "create HeavyEntity\n";
+        // do some heavy operate
+        $this->id = $id;
+    }
+
+    public function __destruct()
+    {
+        echo "destroy HeavyEntity\n";
+    }
+
+    public function id()
+    {
+        return $this->id;
+    }
+
+    public function foo(): string
+    {
+        return "foo {$this->name}";
+    }
+
+    public function __toString()
+    {
+        return "{$this->id} - {$this->age} - {$this->name}";
+    }
+
+    public static function newInstance($id): self
+    {
+        $o = new self($id);
+        $o->love = '跑步';
+        return $o;
+    }
+}
+
+function createEntity($id): HeavyEntity
+{
+    return new HeavyEntity($id);
+}
+
+//$e1 = Proxy::entity(HeavyEntity::class, 234);
+//$e2 = Proxy::entity(HeavyEntity::class, 234);
+//$e4 = Proxy::entity(HeavyEntity::newInstance(234));
+//echo "e1 id:",$e1->id(),"\n";
+//echo "e2 id:",$e2->id(),"\n";
+//echo "e4 id:",$e4->id(),"\n";
+//$e1->love = '足球';
+//$e4->love = '篮球';
+//$e2->love = '排球';
+//echo "e1 love:",$e1->love,"\n";
+//echo "e2 love:",$e2->love,"\n";
+//$e3 = clone $e1;
+//echo "e3 love:",$e3->love,"\n";
+//$e1->love = '乒乓球';
+//echo "e1 love:",$e1->love,"\n";
+//echo "e2 love:",$e2->love,"\n";
+//echo "e3 love:",$e3->love,"\n";
+//unset($e1,$e2);
+//echo "e3 love2:",$e3->love,"\n";
+//file_put_contents("./se1.txt", serialize($e1));
+//file_put_contents("./se2.txt", serialize($e2));
+//file_put_contents("./se4.txt", serialize($e4));
+
+//echo "ue4 love:",$ue4->love,"\n";
+//$ue2->love = '搏击';
+//echo "ue4 love:",$ue4->love,"\n";
+//
+Proxy::preload([HeavyEntity::class]);
+$ue1 = unserialize(file_get_contents('./se1.txt'));
+$ue2 = unserialize(file_get_contents('./se1.txt'));
+$ue4 = unserialize(file_get_contents('./se1.txt'));
+echo "ue1 love:",$ue1->love,"\n";
+echo "ue2 love:",$ue2->love,"\n";
+echo "ue4 love:",$ue4->love,"\n";
+$e5 = Proxy::entity(HeavyEntity::class, 234);
+$e5->love = '爬山';
+echo "ue1 love:",$ue1->love,"\n";
+//
+//file_put_contents("./se1.txt", serialize($ue1));
+//file_put_contents("./se2.txt", serialize($ue2));
+//file_put_contents("./se4.txt", serialize($ue4));

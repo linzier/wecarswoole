@@ -78,10 +78,6 @@ class Bootstrap
 
     protected static function loadFunctions()
     {
-        // 延迟加载函数
-        if (!function_exists('\WecarSwoole\LazyProxy\proxy')) {
-            require_once __DIR__ . '/LazyProxy/proxy.php';
-        }
     }
 
     protected static function loadConfig()

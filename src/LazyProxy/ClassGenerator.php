@@ -45,6 +45,7 @@ class ClassGenerator
                  . "private const IS_ENTITY_SF876Y = " . ($reflection->implementsInterface(Identifiable::class) ? 'true' : 'false') . ";\n"
                  . "private static \$eContainer_sf651l = [];\n"// 实体对象容器，格式：[id => [wraper ref num, object]]，记录实体对象本身以及被wraper引用次数
                  . "private static \$initFunc_sf651l;\n"// 真实对象构造器。如果是构造实体对象，则参数是id+...$extra，普通对象是...$extra
+                 . "private \$initFunc2_sf651l;\n"
                  . "private \$object_sf651l;\n"// 真实对象
                  . "private \$objectId_sf651l;\n"// 真实对象id（只有实体对象才有）
                  . "private \$shareEntity_sf651l;\n"// wraper是否共享对象
@@ -53,8 +54,6 @@ class ClassGenerator
                  . self::createMethods($reflection)
                  . "}";
 
-        // 测试
-        file_put_contents(__DIR__."/tmp_class.php", "<?php\n" . $class);
         eval($class);
         return $proxyClassName;
     }
@@ -142,6 +141,18 @@ class ClassGenerator
                     }\n\n
                  SEG;
 
+        $methods .= <<<SEG
+                    public static function setInitializerForProxy763jhfq(string \$initFunc)
+                    {
+                        if (self::\$initFunc_sf651l || !is_callable(\$initFunc)) {
+                            return;
+                        }
+                        
+                        self::\$initFunc_sf651l = \$initFunc;
+                    }
+                SEG;
+
+
         // unset所有public的实例属性，让其能触发__set、__get
         $methods .= <<<SEG
                     private function initProps_sf651l()
@@ -186,13 +197,20 @@ class ClassGenerator
                             // 普通对象都采用独占式
                             \$this->shareEntity_sf651l = false;
                         } else {
-                            if (
-                                is_object(\$object)
-                                && isset(self::\$eContainer_sf651l[\$object->id()])
-                                && spl_object_hash(\$object) != spl_object_hash(self::\$eContainer_sf651l[\$object->id()][1])
-                            ) {
-                                // 传入的对象和容器的不是一个，则本wraper采用独占式
-                                \$this->shareEntity_sf651l = false;
+                            if (is_object(\$object)) {
+                                if (
+                                    isset(self::\$eContainer_sf651l[\$object->id()])
+                                    && spl_object_hash(\$object) != spl_object_hash(self::\$eContainer_sf651l[\$object->id()][1])
+                                ) {                                    
+                                    // 传入的对象和容器的不是一个，则本wraper采用独占式
+                                    \$this->shareEntity_sf651l = false;
+                                } else {
+                                    if (!isset(self::\$eContainer_sf651l[\$object->id()]) && \$shareEntity) {
+                                        // 共享该对象
+                                        self::\$eContainer_sf651l[\$object->id()] = [1, \$object];
+                                    }
+                                    \$this->shareEntity_sf651l = \$shareEntity;
+                                }
                             } else {
                                 \$this->shareEntity_sf651l = \$shareEntity;
                             }
@@ -214,18 +232,13 @@ class ClassGenerator
                             return;
                         }
                         
-                        if (\$initFunc instanceof \Closure) {
+                        if (is_callable(\$initFunc)) {
                             self::\$initFunc_sf651l = \$initFunc;
                             return;
                         }
-                        
-                        if (is_callable(\$initFunc)) {
-                            self::\$initFunc_sf651l = \Closure::fromCallable(\$initFunc);
-                            return;
-                        }
-                        
+
                         if (is_callable(__CLASS__, \$initFunc)) {
-                            self::\$initFunc_sf651l = \Closure::fromCallable([__CLASS__, \$initFunc]);
+                            self::\$initFunc_sf651l = [__CLASS__, \$initFunc];
                             return;
                         }
                         
@@ -280,6 +293,8 @@ class ClassGenerator
         $methods .= <<<SEG
                     public function __get(\$name)
                     {
+                    // 测试
+                    var_export(self::\$eContainer_sf651l);
                         // 先检查属性是不是protected/private的，如果是，而类没有定义__get，则不能访问
                         // 必须先做此检查，因为代理类和真实类属于继承关系，代理类天然能访问真实类的protected属性，即使真实类没有__get方法
                         if (!self::canMagicOp(\$name, '__get')) {
@@ -339,6 +354,12 @@ class ClassGenerator
                             \$arr[] = 'object_sf651l';
                         }
                         
+                        if (!self::\$initFunc_sf651l instanceof \Closure) {
+                            // 将构造器保存起来，注意闭包无法序列化
+                            \$this->initFunc2_sf651l = self::\$initFunc_sf651l;
+                            \$arr[] = 'initFunc2_sf651l';
+                        }
+                        
                         return \$arr;
                     }\n\n
                 SEG;
@@ -350,6 +371,12 @@ class ClassGenerator
                         if (self::IS_ENTITY_SF876Y && !\$this->rebuild_sf651l && \$this->shareEntity_sf651l) {
                             // 非重建且共享型实体对象，要处理共享对象情况
                             \$this->object_sf651l = \$this->fetchShareEntity(\$this->object_sf651l);
+                        }
+                        
+                        if (!self::\$initFunc_sf651l && \$this->initFunc2_sf651l) {
+                            // 恢复构造器
+                            self::\$initFunc_sf651l = \$this->initFunc2_sf651l;
+                            \$this->initFunc2_sf651l = null;
                         }
                     }\n\n
                 SEG;
@@ -436,7 +463,7 @@ class ClassGenerator
         //                   注意：如果$object传入的是实体对象，而此时容器中已经存在另一个对象，而且两者不是同一个对象（hash值不同），则此时$shareEntity会强制为false
         // $rebuildAfterSleep bool 序列化后反序列化时是否要重建对象，如果要重建，则不会序列化真实对象（反序列化后重建），否则会序列化真实对象
         $methods .= <<<SEG
-                    public static function createProxyPx771jdh7(\$object = null, array \$extra = [], \$initFunc = 'buildInstance', bool \$shareEntity = true, bool \$rebuildAfterSleep = true)
+                    public static function createProxyPx771jdh7(\$object = null, array \$extra = [], \$initFunc = 'newInstance', bool \$shareEntity = true, bool \$rebuildAfterSleep = true)
                     {
                         if (\$object instanceof IWrap) {
                             // 防止对代理对象做包装
