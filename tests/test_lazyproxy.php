@@ -127,6 +127,7 @@ class HeavyEntity implements \WecarSwoole\LazyProxy\Identifiable
 
     public static function newInstance($id): self
     {
+        \Swoole\Coroutine::sleep(1);
         $o = new self($id);
         $o->love = '跑步';
         return $o;
@@ -137,6 +138,16 @@ function createEntity($id): HeavyEntity
 {
     return new HeavyEntity($id);
 }
+
+go(function () {
+    $e = Proxy::entity(HeavyEntity::class, 234);
+    for ($i = 0; $i < 2; $i++) {
+        go(function () use ($e) {
+            echo $e->foo(),"\n";
+        });
+    }
+//    \Swoole\Coroutine::sleep(5);
+});
 
 //$e1 = Proxy::entity(HeavyEntity::class, 234);
 //$e2 = Proxy::entity(HeavyEntity::class, 234);
@@ -165,17 +176,24 @@ function createEntity($id): HeavyEntity
 //$ue2->love = '搏击';
 //echo "ue4 love:",$ue4->love,"\n";
 //
-Proxy::preload([HeavyEntity::class]);
-$ue1 = unserialize(file_get_contents('./se1.txt'));
-$ue2 = unserialize(file_get_contents('./se1.txt'));
-$ue4 = unserialize(file_get_contents('./se1.txt'));
-echo "ue1 love:",$ue1->love,"\n";
-echo "ue2 love:",$ue2->love,"\n";
-echo "ue4 love:",$ue4->love,"\n";
-$e5 = Proxy::entity(HeavyEntity::class, 234);
-$e5->love = '爬山';
-echo "ue1 love:",$ue1->love,"\n";
+//Proxy::preload([HeavyEntity::class]);
+//$ue1 = unserialize(file_get_contents('./se1.txt'));
+//$ue2 = unserialize(file_get_contents('./se1.txt'));
+//$ue4 = unserialize(file_get_contents('./se1.txt'));
+//echo "ue1 love:",$ue1->love,"\n";
+//echo "ue2 love:",$ue2->love,"\n";
+//echo "ue4 love:",$ue4->love,"\n";
+//$e5 = Proxy::entity(HeavyEntity::class, 234);
+//$e5->love = '爬山';
+//echo "ue1 love:",$ue1->love,"\n";
+////
+////file_put_contents("./se1.txt", serialize($ue1));
+////file_put_contents("./se2.txt", serialize($ue2));
+////file_put_contents("./se4.txt", serialize($ue4));
 //
-//file_put_contents("./se1.txt", serialize($ue1));
-//file_put_contents("./se2.txt", serialize($ue2));
-//file_put_contents("./se4.txt", serialize($ue4));
+//$arr = [12, 3, 4432, 3];
+
+//$s = serialize($ch);
+
+//echo \Swoole\Coroutine::getCid();
+

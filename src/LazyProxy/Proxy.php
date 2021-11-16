@@ -2,6 +2,14 @@
 
 namespace WecarSwoole\LazyProxy;
 
+/**
+ * 代理类
+ * 注意：__get、__set、__unset、__isset等方法里面不支持协程切换（参见swoole文档），
+ * 为避免出问题，当构造器中会发生协程切换时（如调API），尽量不要通过这些方法访问私有属性，防止多协程并发操作时出问题，
+ * 而且也不要设置public属性（访问public属性时代理类也是通过__get、__set来处理的，也会导致问题）
+ * Class Proxy
+ * @package WecarSwoole\LazyProxy
+ */
 class Proxy
 {
     private static $clsMap = [];
@@ -37,6 +45,24 @@ class Proxy
         }
 
         return self::wrap($objOrCls, $initFunc, $extra, $shareEntity, $rebuildAfterSleep);
+    }
+
+    /**
+     * 批量创建实体代理
+     * 当其中任何一个触发创建逻辑时，则调$initFunc创建全部的真实对象
+     * 触发创建时机和wrap是一致的
+     * $initFunc函数格式：function(array $ids, ...$extra): Identifiable[]
+     * @param string $className
+     * @param array $ids
+     * @param array $extra
+     * @param string $initFunc
+     * @param bool $shareEntity
+     * @param bool $rebuildAfterSleep
+     * @return array
+     */
+    public static function batch(string $className, array $ids, $extra = [], $initFunc = 'newInstances', bool $shareEntity = true, bool $rebuildAfterSleep = true): array
+    {
+
     }
 
     /**

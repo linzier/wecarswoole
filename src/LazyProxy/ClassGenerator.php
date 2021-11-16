@@ -5,6 +5,7 @@ namespace WecarSwoole\LazyProxy;
 /**
  * 代理类生成器
  * 注意：此处没有处理对静态属性和静态方法的访问，如果代码里面有非正规使用（比如通过$this访问静态成员或方法），会导致问题（$this指向的是代理对象）
+ * 注意：__get、__set、__unset、__isset等方法里面不支持协程切换（参见swoole文档），为避免出问题，尽量不要通过这些方法访问私有属性，防止多协程并发操作时出问题
  * Class ClassGenerator
  * @package WecarSwoole\LazyProxy
  */
@@ -51,6 +52,7 @@ class ClassGenerator
                  . "private \$shareEntity_sf651l;\n"// wraper是否共享对象
                  . "private \$rebuild_sf651l;\n"// 反序列化时是否要重建对象
                  . "private \$extra_sf651l;\n"// 构造真实对象时传入的额外参数
+                 . "private \$lockCh_sf651l;\n"// 协程锁，Channel，防止多协程同时构建对象
                  . self::createMethods($reflection)
                  . "}";
 
@@ -122,6 +124,8 @@ class ClassGenerator
         $methods .= <<<SEG
                     public function __destruct()
                     {
+                        \$this->destroyLock_sf651l();
+                        
                         // wraper尚未关联真实对象，或者真实对象属于独占型对象（非共享对象），不用处理
                         if (!\$this->object_sf651l || !\$this->shareEntity_sf651l) {
                             return;
@@ -246,7 +250,58 @@ class ClassGenerator
                     }\n\n
                 SEG;
 
+        // 创建协程锁（只有在协程环境才创建）
+        // 创建代理对象（或者反序列化后）需重建锁
+        $methods .= <<<SEG
+                    private function createLock_sf651l()
+                    {
+                        if (\$this->lockCh_sf651l || \Swoole\Coroutine::getCid() == -1) {
+                            return;
+                        }
+                        
+                        \$this->lockCh_sf651l = new \Swoole\Coroutine\Channel(1);
+                    }\n\n
+                SEG;
+
+        // 上锁。如有其他协程已经上锁则会阻塞
+        $methods .= <<<SEG
+                    private function lock_sf651l()
+                    {
+                        if (!\$this->lockCh_sf651l) {
+                            return;
+                        }
+                        
+                        // 这里无需区分到底是因为通道关闭了、还是超时了、还是通道空了返回的
+                        \$this->lockCh_sf651l->push(1, 5);
+                    }\n\n
+                SEG;
+
+        // 解锁，唤醒所有等待者
+        $methods .= <<<SEG
+                    private function unlock_sf651l()
+                    {
+                        if (!\$this->lockCh_sf651l) {
+                            return;
+                        }
+                        
+                        // 关闭通道，唤醒所有等待者
+                        \$this->lockCh_sf651l->close();
+                    }
+                    
+                    private function destroyLock_sf651l()
+                    {
+                        if (!\$this->lockCh_sf651l) {
+                            return;
+                        }
+                        
+                        \$this->lockCh_sf651l->close();
+                        unset(\$this->lockCh_sf651l);
+                    }
+                SEG;
+
+
         // 构建真实对象
+        // 需注意多协程下防止并发构建
         $methods .= <<<SEG
                     private function trytoBuild_sf651l()
                     {
@@ -263,20 +318,31 @@ class ClassGenerator
                             return;
                         }
                         
+                        // 加锁
+                        \$this->lock_sf651l();
+                        // 解锁后需再次判断对象是否有创建
+                        if (\$this->object_sf651l) {
+                            return;
+                        }
+                        
                         // 构造
                         \$params = \$this->extra_sf651l ?? [];
                         if (self::IS_ENTITY_SF876Y) {
                             array_unshift(\$params, \$this->objectId_sf651l);
                         }
                         
-                        \$this->object_sf651l = call_user_func(self::\$initFunc_sf651l, ...\$params);
-                        if (!\$this->object_sf651l) {
-                            throw new \Exception('create object of ' . self::REAL_CLS_NAME_SF876Y . 'fail');
-                        }
-                        
-                        // 如果共享对象，则放到容器中
-                        if (\$this->shareEntity_sf651l) {
-                            self::\$eContainer_sf651l[\$this->objectId_sf651l] = [1, \$this->object_sf651l];
+                        try {
+                            \$this->object_sf651l = call_user_func(self::\$initFunc_sf651l, ...\$params);                     
+                            if (!\$this->object_sf651l) {
+                                throw new \Exception('create object of ' . self::REAL_CLS_NAME_SF876Y . 'fail');
+                            }
+                            
+                            // 如果共享对象，则放到容器中
+                            if (\$this->shareEntity_sf651l) {
+                                self::\$eContainer_sf651l[\$this->objectId_sf651l] = [1, \$this->object_sf651l];
+                            }
+                        } finally {
+                            \$this->unlock_sf651l();
                         }
                     }\n\n
                 SEG;
@@ -293,8 +359,6 @@ class ClassGenerator
         $methods .= <<<SEG
                     public function __get(\$name)
                     {
-                    // 测试
-                    var_export(self::\$eContainer_sf651l);
                         // 先检查属性是不是protected/private的，如果是，而类没有定义__get，则不能访问
                         // 必须先做此检查，因为代理类和真实类属于继承关系，代理类天然能访问真实类的protected属性，即使真实类没有__get方法
                         if (!self::canMagicOp(\$name, '__get')) {
@@ -368,6 +432,8 @@ class ClassGenerator
                     public function __wakeup()
                     {
                         \$this->initProps_sf651l();
+                        \$this->createLock_sf651l();
+                        
                         if (self::IS_ENTITY_SF876Y && !\$this->rebuild_sf651l && \$this->shareEntity_sf651l) {
                             // 非重建且共享型实体对象，要处理共享对象情况
                             \$this->object_sf651l = \$this->fetchShareEntity(\$this->object_sf651l);
@@ -473,8 +539,11 @@ class ClassGenerator
                         // 创建代理对象
                         \$proxy = self::getReflectionCLass()->newInstanceWithoutConstructor();
                         \$proxy->rebuild_sf651l = \$rebuildAfterSleep;
+                        
                         // 初始化属性
                         \$proxy->initProps_sf651l();
+                        // 创建锁
+                        \$proxy->createLock_sf651l();
                         // 设置真实对象/标识
                         \$proxy->setObject_sf651l(\$object, \$shareEntity);
                         // 设置初始化器
