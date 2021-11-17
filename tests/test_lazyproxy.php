@@ -197,3 +197,17 @@ go(function () {
 
 //echo \Swoole\Coroutine::getCid();
 
+class AC
+{
+    public $ch;
+
+    public function __construct()
+    {
+        $this->ch = new \Swoole\Coroutine\Channel();
+    }
+}
+
+$a = new AC;
+$b = clone $a;
+
+echo $a->ch === $b->ch;

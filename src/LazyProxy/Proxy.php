@@ -51,16 +51,16 @@ class Proxy
      * 批量创建实体代理
      * 当其中任何一个触发创建逻辑时，则调$initFunc创建全部的真实对象
      * 触发创建时机和wrap是一致的
+     * 该接口只能用来创建实体，且不支持反序列化后rebuild
      * $initFunc函数格式：function(array $ids, ...$extra): Identifiable[]
      * @param string $className
      * @param array $ids
      * @param array $extra
      * @param string $initFunc
      * @param bool $shareEntity
-     * @param bool $rebuildAfterSleep
      * @return array
      */
-    public static function batch(string $className, array $ids, $extra = [], $initFunc = 'newInstances', bool $shareEntity = true, bool $rebuildAfterSleep = true): array
+    public static function batch(string $className, array $ids, $extra = [], $initFunc = 'newInstances', bool $shareEntity = true): array
     {
 
     }
