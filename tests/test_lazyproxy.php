@@ -5,67 +5,67 @@ use WecarSwoole\LazyProxy\Proxy;
 
 require_once './base.php';
 
-//class HeaveClass
-//{
-//    public $age;
-//    public $time;
-//    protected $love;
-//
-//    public function __construct(int $age)
-//    {
-//        echo "create class\n";
-//        $this->age = $age;
-//        $this->time = time();
-//        // 动态设置属性
-//        $this->something = "some other\n";
-//        $this->love = '篮球';
-//    }
-//
-//    public function getAge(): int
-//    {
-//        return $this->age;
-//    }
-//
-//    protected function say($words)
-//    {
-//        echo "say $words {$this->love}\n";
-//    }
-//
-//    public function __call($name, $arguments)
-//    {
-//        if (method_exists($this, $name)) {
-//            return $this->{$name}(...$arguments);
-//        }
-//    }
-//
-//    public function __get($name)
-//    {
-//        return $this->$name;
-//    }
-//
-//    public function __set($name, $value)
-//    {
-//        $this->$name = $value;
-//    }
-//
-//    public function __isset($name)
-//    {
-//        return isset($this->$name);
-//    }
-//
-//    public function __unset($name)
-//    {
-//        unset($this->$name);
-//    }
-//}
-//
-//function createHeaveClass(int $age)
-//{
-//    return new HeaveClass($age);
-//}
+class HeaveClass
+{
+    public $age;
+    public $time;
+    protected $love;
 
-//$a = proxy(HeaveClass::class, 'createHeaveClass', [23], false, true);
-//$a2 = proxy(HeaveClass::class, 'createHeaveClass', [45]);
+    public function __construct(int $age)
+    {
+        echo "create class\n";
+        $this->age = $age;
+        $this->time = time();
+        // 动态设置属性
+        $this->something = "some other\n";
+        $this->love = '篮球';
+    }
+
+    public function getAge(): int
+    {
+        return $this->age;
+    }
+
+    protected function say($words)
+    {
+        echo "say $words {$this->love}\n";
+    }
+
+    public function __call($name, $arguments)
+    {
+        if (method_exists($this, $name)) {
+            return $this->{$name}(...$arguments);
+        }
+    }
+
+    public function __get($name)
+    {
+        return $this->$name;
+    }
+
+    public function __set($name, $value)
+    {
+        $this->$name = $value;
+    }
+
+    public function __isset($name)
+    {
+        return isset($this->$name);
+    }
+
+    public function __unset($name)
+    {
+        unset($this->$name);
+    }
+}
+
+function createHeaveClass(int $age)
+{
+    return new HeaveClass($age);
+}
+
+//$a = Proxy::wrap(HeaveClass::class, 'createHeaveClass', [23]);
+//$a2 = Proxy::wrap(HeaveClass::class, 'createHeaveClass', [45]);
 //echo "age:",$a->age,"\n";
 //echo "age2:",$a2->age,"\n";
 //echo "time:",$a->time,"\n";
@@ -86,10 +86,10 @@ require_once './base.php';
 //echo "after time2:", $aa2->time,"\n";
 //$ca = clone $a;
 //echo "a love:", $a->love,"\n";
-//echo "ca love:", $ca->love,"\n";
+//echo "clone ca love:", $ca->love,"\n";
 //$a->love = "滑冰";
 //echo "after a love:", $a->love,"\n";
-//echo "after ca love:", $ca->love,"\n";
+//echo "clone after ca love:", $ca->love,"\n";
 
 
 class HeavyEntity implements \WecarSwoole\LazyProxy\Identifiable
@@ -128,25 +128,38 @@ class HeavyEntity implements \WecarSwoole\LazyProxy\Identifiable
 
     public static function newInstance($id): self
     {
-        \Swoole\Coroutine::sleep(1);
+        echo "start to create...\n";
         $o = new self($id);
         $o->love = '跑步';
+        echo "create done\n";
         return $o;
+    }
+
+    public static function newInstances(array $ids): array
+    {
+        echo "batch create ".__CLASS__."\n";
+        $arr = [];
+        foreach ($ids as $id) {
+            $arr[] = new self($id);
+        }
+
+        return $arr;
     }
 }
 
-function createEntity($id): HeavyEntity
-{
-    return new HeavyEntity($id);
-}
+//function createEntity($id): HeavyEntity
+//{
+//    return new HeavyEntity($id);
+//}
 
 //go(function () {
 //    $e = Proxy::entity(HeavyEntity::class, 234);
-//    for ($i = 0; $i < 2; $i++) {
-//        go(function () use ($e) {
-//            echo $e->foo(),"\n";
-//        });
-//    }
+//    $e2 = Proxy::entity(HeavyEntity::class, 234);
+//    go(function () use ($e) {
+//        echo $e->foo(),"\n";
+//        $e3 = Proxy::entity(HeavyEntity::class, 234);
+//        echo "e3:",$e3->foo(),"\n";
+//    });
 ////    \Swoole\Coroutine::sleep(5);
 //});
 
@@ -198,4 +211,13 @@ function createEntity($id): HeavyEntity
 
 //echo \Swoole\Coroutine::getCid();
 
-ClassGenerator::generateProxyClass(HeavyEntity::class);
+//ClassGenerator::generateProxyClass(HeavyEntity::class);
+
+
+/**@var $arr HeavyEntity[] **/
+$arr = Proxy::batch(HeavyEntity::class, [123, 345, 456, 567]);
+$h1 = Proxy::entity(HeavyEntity::class, 123);
+echo "h1 func:", $h1->id(), "\n";
+foreach ($arr as $item) {
+    echo $item->id(),"\n";
+}

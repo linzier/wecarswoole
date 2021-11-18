@@ -45,6 +45,7 @@ class ClassGenerator
         $reflection = new \ReflectionClass($baseClassName);
         $class = "namespace $namespace;\n"
                  . "use WecarSwoole\LazyProxy\IWrap;\n\n"
+                 . "use WecarSwoole\LazyProxy\Identifiable;\n\n"
                  . "final class $shortName extends " . $baseClassName . " implements IWrap {\n"
                  . "private const REAL_CLS_NAME_SF876Y = '$baseClassName';\n"
                  . "private const LOCK_KEY_SF876Y = '__lockkey6q901m19a8__';\n"// 批对象锁的key
@@ -70,7 +71,6 @@ class ClassGenerator
                  . self::createMethods($reflection)
                  . "}";
 
-        file_put_contents('./tmp_class.php', "<?php\n".$class);
         eval($class);
         return $proxyClassName;
     }
@@ -152,8 +152,13 @@ class ClassGenerator
                         }
                         
                         // 共享对象容器是空的，销毁
-                        if (empty(self::\$eContainer_sf651l[\$this->objectId_sf651l])) {  
+                        if (empty(self::\$eContainer_sf651l[\$this->objectId_sf651l])) {
                             unset(self::\$eContainer_sf651l[\$this->objectId_sf651l]);
+                            return;
+                        }
+                        
+                        // 不存在cnt字段（但不为空，此时有lock字段，说明其他协程的wraper正在build对象，不能销毁）
+                        if (!isset(self::\$eContainer_sf651l[\$this->objectId_sf651l]['cnt'])) {
                             return;
                         }
                         
@@ -256,14 +261,15 @@ class ClassGenerator
                             if (is_object(\$object)) {
                                 if (
                                     isset(self::\$eContainer_sf651l[\$object->id()])
+                                    && isset(self::\$eContainer_sf651l[\$object->id()]['obj'])
                                     && spl_object_hash(\$object) != spl_object_hash(self::\$eContainer_sf651l[\$object->id()]['obj'])
                                 ) {                                    
                                     // 传入的对象和共享对象容器中的不是一个，则本wraper采用独占式
                                     \$this->shareEntity_sf651l = false;
                                 } else {
-                                    if (!isset(self::\$eContainer_sf651l[\$object->id()]) && \$shareEntity) {
+                                    if ((!isset(self::\$eContainer_sf651l[\$object->id()]) || !isset(self::\$eContainer_sf651l[\$object->id()]['obj'])) && \$shareEntity) {
                                         // 共享该对象
-                                        self::\$eContainer_sf651l[\$object->id()] = ['cnt' => 1, 'obj' => \$object];
+                                        self::\$eContainer_sf651l[\$object->id()] = array_merge(self::\$eContainer_sf651l[\$object->id()] ?? [], ['cnt' => 1, 'obj' => \$object]);
                                     }
                                     \$this->shareEntity_sf651l = \$shareEntity;
                                 }
@@ -311,7 +317,6 @@ class ClassGenerator
                     private function setBatchInitializer_sf651l(\$initFunc, \$extra = [])
                     {
                         \$this->batchExtra_sf651l = \$extra;
-                        
                         // 构造器只需要设置一次
                         if (self::\$batchInitFunc_sf651l) {
                             return;
@@ -322,7 +327,7 @@ class ClassGenerator
                             return;
                         }
 
-                        if (is_callable(__CLASS__, \$initFunc)) {
+                        if (method_exists(__CLASS__, \$initFunc)) {
                             self::\$batchInitFunc_sf651l = [__CLASS__, \$initFunc];
                             return;
                         }
@@ -373,6 +378,8 @@ class ClassGenerator
                         
                         // 关闭通道，唤醒所有等待者
                         \$lock->close();
+                        // 销毁
+                        \$this->destroyLock_sf651l();
                     }\n\n
                 SEG;
 
@@ -416,6 +423,27 @@ class ClassGenerator
                     }
                 SEG;
 
+        $methods .= <<<SEG
+                    private function destroyLock_sf651l()
+                    {
+                        // 批对象
+                        if (\$this->isBatchObject_sf651l()) {
+                            unset(self::\$relTmpContainer_sf651l[\$this->relId_sf651l][self::LOCK_KEY_SF876Y]);
+                            return;
+                        }
+                        
+                        // 共享对象
+                        if (\$this->shareEntity_sf651l) {
+                            unset(self::\$eContainer_sf651l[\$this->objectId_sf651l]['lock']);
+                            return;
+                        }
+                        
+                        // 普通锁
+                        unset(\$this->lockCh_sf651l);
+                        return;
+                    }
+                SEG;
+
         // 构建真实对象
         // 需注意多协程下防止并发构建
         // $isClone bool 是否clone的场景，clone场景下：当从共享容器中取对象时，不将对象引用计数+1；创建对象放入共享容器时，初始引用计数设置为0
@@ -452,7 +480,7 @@ class ClassGenerator
                             }
                         }
                         
-                        \$rst = call_user_func(\$isBatch ? self::\$batchInitFunc2_sf651l : self::\$initFunc_sf651l, ...\$params);
+                        \$rst = call_user_func(\$isBatch ? self::\$batchInitFunc_sf651l : self::\$initFunc_sf651l, ...\$params);
                         
                         if (!\$rst) {
                             throw new \Exception('build object for ' . self::REAL_CLS_NAME_SF876Y . ' fail');
@@ -497,7 +525,7 @@ class ClassGenerator
                         }
                         
                         // 如果是共享对象，则先检查容器中有没有现成的
-                        if (\$this->shareEntity_sf651l && isset(self::\$eContainer_sf651l[\$this->objectId_sf651l])) {
+                        if (\$this->shareEntity_sf651l && isset(self::\$eContainer_sf651l[\$this->objectId_sf651l]) && isset(self::\$eContainer_sf651l[\$this->objectId_sf651l]['obj'])) {
                             \$this->object_sf651l = self::\$eContainer_sf651l[\$this->objectId_sf651l]['obj'];
                             // clone场景不能增加引用计数
                             if (!\$isClone) {
@@ -525,7 +553,7 @@ class ClassGenerator
                         \$this->object_sf651l = \$object;
                         
                         // 如果共享对象，则放到容器中（注意：如果是clone场景，初始引用计数应设置为0，因为克隆对象会分离出去，不能占引用计数）
-                        if (\$this->shareEntity_sf651l && !isset(self::\$eContainer_sf651l[\$this->objectId_sf651l])) {
+                        if (\$this->shareEntity_sf651l && !isset(self::\$eContainer_sf651l[\$this->objectId_sf651l]['obj'])) {
                             self::\$eContainer_sf651l[\$this->objectId_sf651l] = ['cnt' => \$isClone ? 0 : 1, 'obj' => \$object];
                         }
                     }
@@ -536,6 +564,11 @@ class ClassGenerator
         $methods .= <<<SEG
                     private function interceptor_sf651l(string \$methodName, ...\$args)
                     {
+                        if (\$methodName == 'id' && self::IS_ENTITY_SF876Y) {
+                            // 调实体的id()方法不会触发构建
+                            return \$this->objectId_sf651l;
+                        }
+                    
                         \$this->trytoBuild_sf651l();
                         return call_user_func([\$this->object_sf651l, \$methodName], ...\$args);
                     }\n\n
@@ -705,9 +738,9 @@ class ClassGenerator
                         
                         \$id = \$this->objectId_sf651l;
                         if (\$entity) {
-                            if (!isset(self::\$eContainer_sf651l[\$id])) {
+                            if (!isset(self::\$eContainer_sf651l[\$id]) || !isset(self::\$eContainer_sf651l[\$id]['obj'])) {
                                 // 容器中没有共享对象，写入
-                                self::\$eContainer_sf651l[\$id] = ['cnt' => 1, 'obj' => \$entity];
+                                self::\$eContainer_sf651l[\$id] = array_merge(self::\$eContainer_sf651l[\$id] ?? [], ['cnt' => 1, 'obj' => \$entity]);
                                 return \$entity;
                             } else {
                                 // 容器中有共享对象，则看是否要使用容器中的对象
@@ -720,7 +753,7 @@ class ClassGenerator
                             }
                         } else {
                             // 没有提供\$entity
-                            if (isset(self::\$eContainer_sf651l[\$id])) {
+                            if (isset(self::\$eContainer_sf651l[\$id]) && isset(self::\$eContainer_sf651l[\$id]['obj'])) {
                                 self::\$eContainer_sf651l[\$id]['cnt'] += 1;
                                 return self::\$eContainer_sf651l[\$id]['obj'];
                             } else {
@@ -729,7 +762,6 @@ class ClassGenerator
                         }
                     }\n\n
                 SEG;
-
 
         // 入口方法：创建代理实例
         // $object object/string/int 真实对象，或者对象的id
@@ -779,7 +811,7 @@ class ClassGenerator
                         
                         // 生成relId
                         sort(\$ids);
-                        \$relId = md5(self::REAL_CLS_NAME_SF876Y . impolde(',', \$ids) . mt_rand(100, 1000000));
+                        \$relId = md5(self::REAL_CLS_NAME_SF876Y . implode(',', \$ids) . mt_rand(100, 1000000));
                         
                         // 初始化批对象临时容器
                         self::\$relTmpContainer_sf651l[\$relId] = [];

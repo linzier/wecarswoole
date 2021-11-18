@@ -24,7 +24,7 @@ class Proxy
      * @return mixed
      * @throws \Exception
      */
-    public static function entity($objOrCls, $extra = [], $initFunc = 'newInstance', bool $shareEntity = true, bool $rebuildAfterSleep = true)
+    public static function entity($objOrCls, $extra = [], $initFunc = 'newInstance', bool $shareEntity = true, bool $rebuildAfterSleep = false)
     {
         if (!is_array($extra) && ($extra || $extra === 0)) {
             $extra = [$extra];
@@ -59,10 +59,15 @@ class Proxy
      * @param string $initFunc
      * @param bool $shareEntity
      * @return array
+     * @throws \ReflectionException
      */
     public static function batch(string $className, array $ids, $extra = [], $initFunc = 'newInstances', bool $shareEntity = true): array
     {
+        if (!isset(self::$clsMap[$className])) {
+            self::$clsMap[$className] = ClassGenerator::generateProxyClass($className);
+        }
 
+        return self::$clsMap[$className]::createBatchProxyPx771jdh7($ids, $extra, $initFunc, $shareEntity);
     }
 
     /**
