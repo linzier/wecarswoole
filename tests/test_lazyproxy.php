@@ -1,5 +1,6 @@
 <?php
 
+use WecarSwoole\LazyProxy\ClassGenerator;
 use WecarSwoole\LazyProxy\Proxy;
 
 require_once './base.php';
@@ -139,15 +140,15 @@ function createEntity($id): HeavyEntity
     return new HeavyEntity($id);
 }
 
-go(function () {
-    $e = Proxy::entity(HeavyEntity::class, 234);
-    for ($i = 0; $i < 2; $i++) {
-        go(function () use ($e) {
-            echo $e->foo(),"\n";
-        });
-    }
-//    \Swoole\Coroutine::sleep(5);
-});
+//go(function () {
+//    $e = Proxy::entity(HeavyEntity::class, 234);
+//    for ($i = 0; $i < 2; $i++) {
+//        go(function () use ($e) {
+//            echo $e->foo(),"\n";
+//        });
+//    }
+////    \Swoole\Coroutine::sleep(5);
+//});
 
 //$e1 = Proxy::entity(HeavyEntity::class, 234);
 //$e2 = Proxy::entity(HeavyEntity::class, 234);
@@ -197,17 +198,4 @@ go(function () {
 
 //echo \Swoole\Coroutine::getCid();
 
-class AC
-{
-    public $ch;
-
-    public function __construct()
-    {
-        $this->ch = new \Swoole\Coroutine\Channel();
-    }
-}
-
-$a = new AC;
-$b = clone $a;
-
-echo $a->ch === $b->ch;
+ClassGenerator::generateProxyClass(HeavyEntity::class);
