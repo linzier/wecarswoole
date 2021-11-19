@@ -60,7 +60,7 @@ WecarSwoole 是基于 EasySwoole 开发的适用于喂车业务系统的 Web 开
 - [Sentinel(哨兵)](./readme/sentinel.md)
 - [自定义进程](./readme/process.md)
 - [消息队列](./readme/queue.md)
-- [延迟加载(LazyProxy)](./lazyproxy.md)
+- [延迟加载(LazyProxy)](./readme/lazyproxy.md)
 - [DTO](./readme/dto.md)
 - [依赖注入](./readme/di.md)
 - [Util 工具](./readme/util.md)
