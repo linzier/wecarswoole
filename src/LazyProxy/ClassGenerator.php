@@ -141,11 +141,6 @@ class ClassGenerator
                     {
                         \$this->clearBatchObject_sf651l();
                         \$this->clearShareObject_sf651l();
-                        // 测试
-                        echo "----share:\n";
-                        var_export(self::\$eContainer_sf651l);
-                        echo "----batch:\n";
-                        var_export(self::\$relTmpContainer_sf651l);
                     }\n\n
                  SEG;
 
@@ -383,8 +378,6 @@ class ClassGenerator
                         
                         // 关闭通道，唤醒所有等待者
                         \$lock->close();
-                        // 销毁
-                        \$this->destroyLock_sf651l();
                     }\n\n
                 SEG;
 
@@ -425,27 +418,6 @@ class ClassGenerator
                         // 普通锁
                         \$this->lockCh_sf651l = \$lock;
                         return \$lock;
-                    }
-                SEG;
-
-        $methods .= <<<SEG
-                    private function destroyLock_sf651l()
-                    {
-                        // 批对象
-                        if (\$this->isBatchObject_sf651l()) {
-                            unset(self::\$relTmpContainer_sf651l[\$this->relId_sf651l][self::LOCK_KEY_SF876Y]);
-                            return;
-                        }
-                        
-                        // 共享对象
-                        if (\$this->shareEntity_sf651l) {
-                            unset(self::\$eContainer_sf651l[\$this->objectId_sf651l]['lock']);
-                            return;
-                        }
-                        
-                        // 普通锁
-                        unset(\$this->lockCh_sf651l);
-                        return;
                     }
                 SEG;
 
@@ -559,7 +531,7 @@ class ClassGenerator
                         
                         // 如果共享对象，则放到容器中（注意：如果是clone场景，初始引用计数应设置为0，因为克隆对象会分离出去，不能占引用计数）
                         if (\$this->shareEntity_sf651l && !isset(self::\$eContainer_sf651l[\$this->objectId_sf651l]['obj'])) {
-                            self::\$eContainer_sf651l[\$this->objectId_sf651l] = ['cnt' => \$isClone ? 0 : 1, 'obj' => \$object];
+                            self::\$eContainer_sf651l[\$this->objectId_sf651l] = array_merge(self::\$eContainer_sf651l[\$this->objectId_sf651l] ?? [], ['cnt' => \$isClone ? 0 : 1, 'obj' => \$object]);
                         }
                     }
                 SEG;

@@ -7,13 +7,14 @@ require_once './base.php';
 
 class HeaveClass
 {
-    public $age;
-    public $time;
-    protected $love;
+    private $age;
+    private $name;
+    private $time;
+    private $love;
 
     public function __construct(int $age)
     {
-        echo "create class\n";
+        echo "build " . __CLASS__ . "\n";
         $this->age = $age;
         $this->time = time();
         // 动态设置属性
@@ -21,56 +22,22 @@ class HeaveClass
         $this->love = '篮球';
     }
 
-    public function getAge(): int
+    public function say($words)
     {
-        return $this->age;
-    }
-
-    protected function say($words)
-    {
-        echo "say $words {$this->love}\n";
-    }
-
-    public function __call($name, $arguments)
-    {
-        if (method_exists($this, $name)) {
-            return $this->{$name}(...$arguments);
-        }
-    }
-
-    public function __get($name)
-    {
-        return $this->$name;
-    }
-
-    public function __set($name, $value)
-    {
-        $this->$name = $value;
-    }
-
-    public function __isset($name)
-    {
-        return isset($this->$name);
-    }
-
-    public function __unset($name)
-    {
-        unset($this->$name);
+        echo "name:{$this->name},age:{$this->age},love:{$this->love} say $words,and do other:{$this->something}\n";
     }
 }
 
 function createHeaveClass(int $age)
 {
+    // 做一些耗时的操作...
     return new HeaveClass($age);
 }
 
-//$a = Proxy::wrap(HeaveClass::class, 'createHeaveClass', [23]);
-//$a2 = Proxy::wrap(HeaveClass::class, 'createHeaveClass', [45]);
-//echo "age:",$a->age,"\n";
-//echo "age2:",$a2->age,"\n";
+//$a1 = Proxy::wrap(HeaveClass::class, 'createHeaveClass', [23, '张三']);
 //echo "time:",$a->time,"\n";
 //echo "time2:",$a2->time,"\n";
-//$a->say('hello');
+//$a1->say('hello');
 //echo $a->something,"\n";// 动态属性
 //$a->love = '足球';
 //unset($a->love);
@@ -95,7 +62,6 @@ function createHeaveClass(int $age)
 class HeavyEntity implements \WecarSwoole\LazyProxy\Identifiable
 {
     private $id;
-    private $age;
     private $name;
     public $love;
 
@@ -107,14 +73,14 @@ class HeavyEntity implements \WecarSwoole\LazyProxy\Identifiable
         $this->name = $name ?: 'unknow';
     }
 
-    public function __destruct()
-    {
-        echo "destroy HeavyEntity\n";
-    }
-
     public function setName($val)
     {
         $this->name = $val;
+    }
+
+    public function getName(): string
+    {
+        return $this->name;
     }
 
     public function id()
@@ -124,29 +90,40 @@ class HeavyEntity implements \WecarSwoole\LazyProxy\Identifiable
 
     public function foo(): string
     {
-        return "foo {$this->name}";
+        return "I am {$this->name}";
     }
 
     public function __toString()
     {
-        return "{$this->id} - {$this->age} - {$this->name}";
+        return "{$this->id} - {$this->name}";
     }
 
-    public static function newInstance($id): self
+    /**
+     * 单一对象构建器
+     * @param $id
+     * @return HeavyEntity
+     */
+    public static function newInstance($id, $name = ''): self
     {
         echo "start to create...\n";
-        $o = new self($id);
+        // 做一些耗时操作
+        Swoole\Coroutine::sleep(1);
+        $o = new self($id, $name);
         $o->love = '跑步';
-        echo "create done\n";
         return $o;
     }
 
-    public static function newInstances(array $ids, $name = ''): array
+    /**
+     * 批对象构建器
+     * @return array
+     */
+    public static function newInstances(array $ids, $namePrefix = ''): array
     {
         echo "batch create ".__CLASS__."\n";
+        // 做一些耗时操作
         $arr = [];
         foreach ($ids as $id) {
-            $arr[] = new self($id, $name . '-' . $id);
+            $arr[] = new self($id, $namePrefix . '-' . $id);
         }
 
         return $arr;
@@ -160,37 +137,44 @@ class HeavyEntity implements \WecarSwoole\LazyProxy\Identifiable
 
 //go(function () {
 //    $e = Proxy::entity(HeavyEntity::class, 234);
-//    $e2 = Proxy::entity(HeavyEntity::class, 234);
 //    go(function () use ($e) {
-//        echo $e->foo(),"\n";
-//        $e3 = Proxy::entity(HeavyEntity::class, 234);
-//        echo "e3:",$e3->foo(),"\n";
+//        echo $e->love,"\n";
+//    });
+//    go(function () use ($e) {
+//        echo $e->love,"\n";
 //    });
 ////    \Swoole\Coroutine::sleep(5);
 //});
 
-//$e1 = Proxy::entity(HeavyEntity::class, 234);
-//$e2 = Proxy::entity(HeavyEntity::class, 234);
-//$e4 = Proxy::entity(HeavyEntity::newInstance(234));
+//$e1 = Proxy::entity(HeavyEntity::class, [234, '张三']);
+//$e2 = Proxy::entity(HeavyEntity::class, [234, '张三']);
 //echo "e1 id:",$e1->id(),"\n";
 //echo "e2 id:",$e2->id(),"\n";
-//echo "e4 id:",$e4->id(),"\n";
-//$e1->love = '足球';
-//$e4->love = '篮球';
-//$e2->love = '排球';
-//echo "e1 love:",$e1->love,"\n";
-//echo "e2 love:",$e2->love,"\n";
-//$e3 = clone $e1;
-//echo "e3 love:",$e3->love,"\n";
-//$e1->love = '乒乓球';
-//echo "e1 love:",$e1->love,"\n";
-//echo "e2 love:",$e2->love,"\n";
-//echo "e3 love:",$e3->love,"\n";
-//unset($e1,$e2);
-//echo "e3 love2:",$e3->love,"\n";
+//echo "e1 foo:", $e1->foo(), "\n";
+//echo "e2 foo:", $e2->foo(), "\n";
 //file_put_contents("./se1.txt", serialize($e1));
 //file_put_contents("./se2.txt", serialize($e2));
 //file_put_contents("./se4.txt", serialize($e4));
+
+//go(function (){
+//    $e0 = $e1 = null;
+//    for ($i = 0; $i < 2; $i++) {
+//        go(function () use ($i, &$e0, &$e1) {
+//            ${'e'.$i} = Proxy::entity(HeavyEntity::class, [234, '张三' . $i]);
+//            echo ${'e'.$i}->foo(),"\n";
+//        });
+//    }
+//});
+
+//go(function () {
+////    $e3 = Proxy::entity(HeavyEntity::class, [678, '张三'], 'newInstance', true, true);
+////    $e3->setName('李四');
+////    file_put_contents('./heavy_entity.txt', serialize($e3));
+//    Proxy::preload([HeavyEntity::class]);
+//    $e4 = unserialize(file_get_contents('./heavy_entity.txt'));
+//// 由于反序列化后需重建对象，下面打印出来name仍然是张三
+//    echo $e4->getName();// 打印"张三"
+//});
 
 //echo "ue4 love:",$ue4->love,"\n";
 //$ue2->love = '搏击';
@@ -221,11 +205,13 @@ class HeavyEntity implements \WecarSwoole\LazyProxy\Identifiable
 
 
 /**@var $arr HeavyEntity[] **/
-$arr = Proxy::batch(HeavyEntity::class, [123, 345, 456, 567], ['张三']);
-$h1 = Proxy::entity(HeavyEntity::class, 123);
-$ch1 = clone $h1;
-foreach ($arr as $item) {
-    echo $item->foo(),"\n";
-}
-$ch1->setName("李四");
-echo "h1 func：",$h1->foo(),"\n";
+go(function () {
+    $arr = Proxy::batch(HeavyEntity::class, [123, 345, 456, 567], ['批对象']);
+    $h1 = Proxy::entity(HeavyEntity::class, 123);
+    $ch1 = clone $h1;
+    foreach ($arr as $item) {
+        echo $item->foo(),"\n";
+    }
+    $ch1->setName("李四");
+    echo "h1 func：",$h1->foo(),"\n";
+});
