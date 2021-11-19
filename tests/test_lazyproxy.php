@@ -96,19 +96,25 @@ class HeavyEntity implements \WecarSwoole\LazyProxy\Identifiable
 {
     private $id;
     private $age;
-    protected $name;
+    private $name;
     public $love;
 
-    public function __construct($id)
+    public function __construct($id, $name = '')
     {
         echo "create HeavyEntity\n";
         // do some heavy operate
         $this->id = $id;
+        $this->name = $name ?: 'unknow';
     }
 
     public function __destruct()
     {
         echo "destroy HeavyEntity\n";
+    }
+
+    public function setName($val)
+    {
+        $this->name = $val;
     }
 
     public function id()
@@ -135,12 +141,12 @@ class HeavyEntity implements \WecarSwoole\LazyProxy\Identifiable
         return $o;
     }
 
-    public static function newInstances(array $ids): array
+    public static function newInstances(array $ids, $name = ''): array
     {
         echo "batch create ".__CLASS__."\n";
         $arr = [];
         foreach ($ids as $id) {
-            $arr[] = new self($id);
+            $arr[] = new self($id, $name . '-' . $id);
         }
 
         return $arr;
@@ -215,9 +221,11 @@ class HeavyEntity implements \WecarSwoole\LazyProxy\Identifiable
 
 
 /**@var $arr HeavyEntity[] **/
-$arr = Proxy::batch(HeavyEntity::class, [123, 345, 456, 567]);
+$arr = Proxy::batch(HeavyEntity::class, [123, 345, 456, 567], ['张三']);
 $h1 = Proxy::entity(HeavyEntity::class, 123);
-echo "h1 func:", $h1->id(), "\n";
+$ch1 = clone $h1;
 foreach ($arr as $item) {
-    echo $item->id(),"\n";
+    echo $item->foo(),"\n";
 }
+$ch1->setName("李四");
+echo "h1 func：",$h1->foo(),"\n";

@@ -141,6 +141,11 @@ class ClassGenerator
                     {
                         \$this->clearBatchObject_sf651l();
                         \$this->clearShareObject_sf651l();
+                        // 测试
+                        echo "----share:\n";
+                        var_export(self::\$eContainer_sf651l);
+                        echo "----batch:\n";
+                        var_export(self::\$relTmpContainer_sf651l);
                     }\n\n
                  SEG;
 
@@ -635,20 +640,12 @@ class ClassGenerator
                             \$this->trytoBuild_sf651l();
                             \$arr[] = 'object_sf651l';
                         } else {
-                            if (\$this->isBatchObject_sf651l()) {
-                                \$arr[] = 'batchExtra_sf651l';
-                                if (self::\$batchInitFunc_sf651l && !self::\$batchInitFunc_sf651l instanceof \Closure) {
-                                    // 将构造器保存起来，注意闭包无法序列化
-                                    \$this->batchInitFunc2_sf651l = self::\$batchInitFunc_sf651l;
-                                    \$arr[] = 'batchInitFunc2_sf651l';
-                                }
-                            } else {
-                                \$arr[] = 'extra_sf651l';
-                                if (self::\$initFunc_sf651l && !self::\$initFunc_sf651l instanceof \Closure) {
-                                    // 将构造器保存起来，注意闭包无法序列化
-                                    \$this->initFunc2_sf651l = self::\$initFunc_sf651l;
-                                    \$arr[] = 'initFunc2_sf651l';
-                                }
+                            // 这里只需考虑单一对象模式，批对象不支持反序列化后重建
+                            \$arr[] = 'extra_sf651l';
+                            if (self::\$initFunc_sf651l && !self::\$initFunc_sf651l instanceof \Closure) {
+                                // 将构造器保存起来，注意闭包无法序列化
+                                \$this->initFunc2_sf651l = self::\$initFunc_sf651l;
+                                \$arr[] = 'initFunc2_sf651l';
                             }
                         }
                         
@@ -661,6 +658,10 @@ class ClassGenerator
                     {
                         \$this->initProps_sf651l();
                         
+                        // 反序列化后要将属性改成非批对象，否则可能会影响其他批对象
+                        \$this->relId_sf651l = '';
+                        \$this->relObjIds_sf651l = [];
+                        
                         if (!\$this->rebuild_sf651l && \$this->shareEntity_sf651l) {
                             // 非重建且共享型实体对象，要处理共享对象情况
                             \$this->object_sf651l = \$this->fetchShareEntity_sf651l(\$this->object_sf651l);
@@ -670,11 +671,6 @@ class ClassGenerator
                         if (!self::\$initFunc_sf651l && \$this->initFunc2_sf651l) {
                             self::\$initFunc_sf651l = \$this->initFunc2_sf651l;
                             \$this->initFunc2_sf651l = null;
-                        }
-                        
-                        if (!self::\$batchInitFunc_sf651l && \$this->batchInitFunc2_sf651l) {
-                            self::\$batchInitFunc_sf651l = \$this->batchInitFunc2_sf651l;
-                            \$this->batchInitFunc2_sf651l = null;
                         }
                     }\n\n
                 SEG;
