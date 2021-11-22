@@ -2,6 +2,8 @@
 
 namespace WecarSwoole\LazyProxy;
 
+use WecarSwoole\Util\Reflection;
+
 /**
  * 代理类生成器
  * 注意：此处没有处理对静态属性和静态方法的访问，如果代码里面有非正规使用（比如通过$this访问静态成员或方法），会导致问题（$this指向的是代理对象）
@@ -17,7 +19,7 @@ class ClassGenerator
      * 生成代理类
      * @param string $baseClassName 类全名
      * @return string
-     * @throws \ReflectionException
+     * @throws \Exception
      */
     public static function generateProxyClass(string $baseClassName): string
     {
@@ -42,10 +44,11 @@ class ClassGenerator
         // 否则加单一对象锁
         // 以上锁优先级递减：批对象锁>共享对象锁>单一对象锁
         // 批对象锁放在$relTmpContainer_sf651l中，共享对象锁放在$eContainer_sf651l中
-        $reflection = new \ReflectionClass($baseClassName);
+        $reflection = Reflection::getReflectionClass($baseClassName);
         $class = "namespace $namespace;\n"
                  . "use WecarSwoole\LazyProxy\IWrap;\n\n"
                  . "use WecarSwoole\LazyProxy\Identifiable;\n\n"
+                 . "use WecarSwoole\Util\Reflection\n\n"
                  . "final class $shortName extends " . $baseClassName . " implements IWrap {\n"
                  . "private const REAL_CLS_NAME_SF876Y = '$baseClassName';\n"
                  . "private const LOCK_KEY_SF876Y = '__lockkey6q901m19a8__';\n"// 批对象锁的key
@@ -218,7 +221,7 @@ class ClassGenerator
         $methods .= <<<SEG
                     private function initProps_sf651l()
                     {
-                        \$props = self::getReflectionCLass_sf651l()->getProperties(\ReflectionProperty::IS_PUBLIC);
+                        \$props = Reflection::getReflectionClass(__CLASS__)->getProperties(\ReflectionProperty::IS_PUBLIC);
                         foreach (\$props as \$property) {
                             if (\$property->isStatic()) {
                                 continue;
@@ -748,7 +751,7 @@ class ClassGenerator
                         }
                         
                         // 创建代理对象
-                        \$proxy = self::getReflectionCLass_sf651l()->newInstanceWithoutConstructor();
+                        \$proxy = Reflection::getReflectionClass(__CLASS__)->newInstanceWithoutConstructor();
                         \$proxy->rebuild_sf651l = \$rebuildAfterSleep;
                         // 批对象id
                         \$proxy->relId_sf651l = \$batchRelId;
@@ -800,17 +803,6 @@ class ClassGenerator
                         return boolval(\$this->relId_sf651l);
                     }
                 SEG;
-
-
-        $methods .= <<<SEG
-                    private static function getReflectionCLass_sf651l()
-                    {
-                        static \$r;
-                        \$r = \$r ?? new \ReflectionClass(__CLASS__);
-                        return \$r;
-                    }
-                SEG;
-
 
         return $methods;
     }

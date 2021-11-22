@@ -4,6 +4,7 @@ namespace WecarSwoole\ATO;
 
 use EasySwoole\Utility\Str;
 use WecarSwoole\Util\AnnotationAnalyser;
+use WecarSwoole\Util\Reflection;
 
 /**
  * 根据数组数据构建对象属性值
@@ -38,16 +39,11 @@ trait ArrayToObject
      * @param bool $strict
      * @param bool $mapping
      * @return mixed
-     * @throws \ReflectionException
+     * @throws \Exception
      */
     public static function buildFromArrayS(array $data, bool $strict = true, bool $mapping = true): self
     {
-        static $r;
-        if (!$r) {
-            $r = new \ReflectionClass(__CLASS__);
-        }
-
-        $obj = $r->newInstanceWithoutConstructor();
+        $obj = Reflection::getReflectionClass(__CLASS__)->newInstanceWithoutConstructor();
         $obj->buildFromArray($data, $strict, $mapping);
         return $obj;
     }
@@ -118,6 +114,13 @@ trait ArrayToObject
         }
     }
 
+    /**
+     * @param string $propertyName
+     * @param string $type
+     * @param $data
+     * @param bool $strict
+     * @throws \Exception
+     */
     private static function valueMappingByVar(string $propertyName, string $type, &$data, bool $strict)
     {
         $type = trim($type);
@@ -134,7 +137,7 @@ trait ArrayToObject
             return;
         }
 
-        $reflectionClass = new \ReflectionClass($type);
+        $reflectionClass = Reflection::getReflectionClass($type);
         if (!$reflectionClass->isSubclassOf(IArrayBuildable::class)) {
             return;
         }
