@@ -29,6 +29,8 @@ trait ArrayToObject
                 $this->$field = $value;
             }
         }
+
+        $this->__afterBuildFromArray($data);
     }
 
     /** 对应的静态方法
@@ -46,13 +48,13 @@ trait ArrayToObject
         }
 
         $obj = $r->newInstanceWithoutConstructor();
-        foreach ($obj->map($data, $strict, $mapping) as $field => $value) {
-            if (property_exists(__CLASS__, $field)) {
-                $obj->$field = $value;
-            }
-        }
-
+        $obj->buildFromArray($data, $strict, $mapping);
         return $obj;
+    }
+
+    protected function __afterBuildFromArray(array $data)
+    {
+        // 从数组构建对象后的钩子，具体类可以覆盖此方法以编写自己的逻辑
     }
 
     protected function map(array $data, bool $strict, bool $mapping = true): array

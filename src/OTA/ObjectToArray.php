@@ -41,6 +41,17 @@ trait ObjectToArray
             $data = self::camelToSnake($data);
         }
 
+        // 后置钩子
+        return $this->__afterToArray($data);
+    }
+
+    /**
+     * 具体类可以重写该钩子以实现自定义逻辑
+     * @param array $data
+     * @return array
+     */
+    protected function __afterToArray(array $data): array
+    {
         return $data;
     }
 
