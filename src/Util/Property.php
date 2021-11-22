@@ -16,19 +16,19 @@ class Property
      * @param bool $onlySelf 仅获取自己的属性，不获取从基类继承来的
      * @param int $filter ReflectionProperty中的常量，参见PHP文档
      * @return array
-     * @throws \ReflectionException
+     * @throws \Exception
      */
     public static function getProperties($object, array $excludes = [], bool $onlySelf = false, int $filter = 0): array
     {
-        $properties = $filter ? (new \ReflectionClass($object))->getProperties($filter) : (new \ReflectionClass($object))->getProperties();
+        $cls = is_string($object) ? $object : get_class($object);
+        $properties = $filter ? Reflection::getReflectionClass($cls)->getProperties($filter) : Reflection::getReflectionClass($cls)->getProperties();
 
         if ($onlySelf) {
             // 过滤掉基类的
-            $className = get_class($object);
             $properties = array_filter(
                 $properties,
-                function (\ReflectionProperty $property) use ($className) {
-                    return $property->getDeclaringClass()->getName() == $className;
+                function (\ReflectionProperty $property) use ($cls) {
+                    return $property->getDeclaringClass()->getName() == $cls;
                 }
             );
         }
