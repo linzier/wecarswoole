@@ -438,3 +438,9 @@ $obj = new HeavyClass();
 $oProxy = Proxy::wrap($obj, 'createHeaveClass');// 参见方法说明，可设置额外参数
 // 序列化...
 ```
+
+
+### 最佳实践
+一般情况下我们都是给实体对象（如券）加一层代理，建议实体对象除了实现`Identifiable`外，还提供`newInstance`和`newInstances`两个静态方法作为构造器，这样在创建代理时就不用再指定构造器了。这两个构造器中一般通过仓储来实际创建实体对象。
+
+
