@@ -67,4 +67,4 @@ WecarSwoole 是基于 EasySwoole 开发的适用于喂车业务系统的 Web 开
 - 测试
     - [单元测试](./readme/union_test.md)
 - [代码规范](./readme/code_rule.md)
-- [其他思考](./readme/others.md)
+- [实践上的思考](./readme/others.md)
