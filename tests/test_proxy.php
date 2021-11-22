@@ -14,6 +14,11 @@ class A
     private $name;
     private $age;
 
+    public function __construct()
+    {
+        $this->name = '三子';
+    }
+
     protected function __afterBuildFromArray(array $data)
     {
         $this->age = 345;
@@ -31,7 +36,8 @@ class A
     }
 }
 
-$a = A::buildFromArrayS(['name' => '李四']);
-$a->say();
-$arr = $a->toArray();
-var_export($arr);
+$arr = ['a' => new A()];
+$s = json_encode($arr);
+echo "enc:",$s,"\n";
+$a2 = json_decode($s, true);
+var_export($a2);
