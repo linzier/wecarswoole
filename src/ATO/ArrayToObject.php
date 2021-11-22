@@ -31,6 +31,30 @@ trait ArrayToObject
         }
     }
 
+    /** 对应的静态方法
+     * @param array $data
+     * @param bool $strict
+     * @param bool $mapping
+     * @return mixed
+     * @throws \ReflectionException
+     */
+    public static function buildFromArrayS(array $data, bool $strict = true, bool $mapping = true): self
+    {
+        static $r;
+        if (!$r) {
+            $r = new \ReflectionClass(__CLASS__);
+        }
+
+        $obj = $r->newInstanceWithoutConstructor();
+        foreach ($obj->map($data, $strict, $mapping) as $field => $value) {
+            if (property_exists(__CLASS__, $field)) {
+                $obj->$field = $value;
+            }
+        }
+
+        return $obj;
+    }
+
     protected function map(array $data, bool $strict, bool $mapping = true): array
     {
         return $this->valueMapping($this->fieldMapping($data), $strict, $mapping);
