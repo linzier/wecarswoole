@@ -38,9 +38,3 @@ class ExitHandler
     }
 }
 
-// 清理所有的定时器
-ExitHandler::addHandler(
-    function ($server, $workerId) {
-        Timer::clearAll();
-    }
-);
