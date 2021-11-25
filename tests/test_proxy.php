@@ -4,30 +4,19 @@ namespace Test;
 use Swoole\Coroutine as Co;
 use WecarSwoole\ATO\ArrayToObject;
 use WecarSwoole\OTA\ObjectToArray;
+use WecarSwoole\Util\GetterSetter;
 
 require_once './base.php';
 
 class A
 {
-    use ArrayToObject, ObjectToArray;
-
     private $name;
     private $age;
 
-    public function __construct()
+    public function __construct($name, $age)
     {
-        $this->name = '三子';
-    }
-
-    protected function __afterBuildFromArray(array $data)
-    {
-        $this->age = 345;
-    }
-
-    protected function __afterToArray(array $data): array
-    {
-        unset($data['age']);
-        return $data;
+        $this->name = $name;
+        $this->age = $age;
     }
 
     public function say()
@@ -36,8 +25,12 @@ class A
     }
 }
 
-$arr = ['a' => new A()];
-$s = json_encode($arr);
-echo "enc:",$s,"\n";
-$a2 = json_decode($s, true);
-var_export($a2);
+$a = new A('张三', 34);
+
+$r = new \ReflectionClass(A::class);
+$p = $r->getProperty('name');
+
+$r->getDocComment();
+
+$p->setAccessible(true);
+echo $p->getValue($a);
