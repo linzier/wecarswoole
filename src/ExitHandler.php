@@ -4,7 +4,6 @@ namespace WecarSwoole;
 
 use Closure;
 use Swoole\Server;
-use Swoole\Timer;
 
 /**
  * worker/tasker 退出处理程序

@@ -4,6 +4,7 @@ namespace WecarSwoole\Config\Apollo;
 
 use Swlib\Http\Exception\HttpExceptionMask;
 use Swlib\Saber;
+use Swoole\Coroutine;
 use WecarSwoole\Config\Config;
 
 /**
@@ -78,6 +79,7 @@ class Client
             $notifyResults = $this->get($this->getNotifyUrl(), $this->intervalTimeout);
 
             if ($notifyResults['http_code'] != 200) {
+                Coroutine::sleep(10);
                 continue;
             }
 
@@ -90,6 +92,7 @@ class Client
             }
 
             if (!$changeList) {
+                Coroutine::sleep(10);
                 continue;
             }
 
@@ -103,6 +106,7 @@ class Client
             foreach ($pullRst['list'] as $namespaceName => $result) {
                 $result && ($this->notifications[$namespaceName]['notificationId'] = $changeList[$namespaceName]);
             }
+            Coroutine::sleep(5);
         } while (true);
     }
 
