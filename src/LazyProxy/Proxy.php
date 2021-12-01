@@ -24,7 +24,7 @@ class Proxy
      * @return mixed
      * @throws \Exception
      */
-    public static function entity($objOrCls, $extra = [], $initFunc = 'newInstance', bool $shareEntity = true, bool $rebuildAfterSleep = false)
+    public static function entity($objOrCls, $extra = [], bool $rebuildAfterSleep = false, bool $shareEntity = true, $initFunc = 'newInstance')
     {
         if (!is_array($extra) && ($extra || $extra === 0)) {
             $extra = [$extra];
