@@ -59,6 +59,10 @@ class RequestTimeMiddleware implements IControllerMiddleware
             } else {
                 // 如果超过5分钟，则清零，并检查是否需要发送告警日志
                 $stats = json_decode($stats, true);
+                if (!$stats) {
+                    return $next($request, $response);
+                }
+
                 if ($stats['time'] < time() - 60 * 5) {
                     $this->log($stats, $request);
                     $stats = $this->initStatsInfo();
