@@ -826,12 +826,13 @@ class ClassGenerator
     {
         $args = '';
         foreach ($method->getParameters() as $parameter) {
+            $type = $parameter->getType();
             if (version_compare(PHP_VERSION, '7.1', '>=')) {
-                $args .= $parameter->allowsNull() && $parameter->getType() ? '?' : '';
+                $args .= $parameter->allowsNull() && $type ? '?' : '';
             }
 
-            if ($parameter->getType()) {
-                $args .= $parameter->getType()->getName();
+            if ($type) {
+                $args .= ($type->isBuiltin() ? '' : '\\') . $type->getName();
             }
 
             $args .= ' ' . ($parameter->isPassedByReference() ? '&' : '');
