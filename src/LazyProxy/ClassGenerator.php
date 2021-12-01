@@ -48,7 +48,7 @@ class ClassGenerator
         $class = "namespace $namespace;\n"
                  . "use WecarSwoole\LazyProxy\IWrap;\n\n"
                  . "use WecarSwoole\LazyProxy\Identifiable;\n\n"
-                 . "use WecarSwoole\Util\Reflection\n\n"
+                 . "use WecarSwoole\Util\Reflection;\n\n"
                  . "final class $shortName extends " . $baseClassName . " implements IWrap {\n"
                  . "private const REAL_CLS_NAME_SF876Y = '$baseClassName';\n"
                  . "private const LOCK_KEY_SF876Y = '__lockkey6q901m19a8__';\n"// 批对象锁的key
