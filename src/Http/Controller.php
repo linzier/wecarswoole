@@ -187,12 +187,18 @@ class Controller extends EsController
 
     protected function formatParams()
     {
-        // 处理请求参数
-        $params = $this->request()->getRequestParam();
-        if (isset($params['data'])) {
-            $params = is_string($params['data']) ? json_decode($params['data'], true) : $params['data'];
+        $contentType = $this->request()->getHeader('content-type')[0] ?? "form-data";
+        if ($contentType == 'application/json') {
+            // json 格式直接读取 raw 流
+            $body = $this->request()->getBody()->getContents();
+            $params = array_merge($this->request()->getQueryParams(), json_decode($body, true) ?: []);
+        } else {
+            $params = $this->request()->getRequestParam();
+            if (isset($params['data'])) {
+                $params = is_string($params['data']) ? json_decode($params['data'], true) : $params['data'];
+            }
         }
-
+        
         $this->requestParams = $params;
     }
 
