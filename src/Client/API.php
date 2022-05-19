@@ -55,7 +55,7 @@ class API
             $url = '_';
         }
 
-        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+        if (strpos($url, 'http') !== 0) {
             $api = strpos($url, ':') === false ? "$group:$url" : $url;
         } else {
             $api = "$group:_";
