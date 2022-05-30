@@ -39,3 +39,11 @@ public static function mainServerCreate(EventRegister $register)
 >   ];
 >   ```
 > 框架对此仍然做了兼容，但新版本程序不要再使用此配置，该模式在容器下无效。
+>
+> 旧版本代码如果想要使用命令行模式，需要更新 wecarswoole 框架后，在入口文件 `easyswoole` 中加入如下一段代码：
+> ```php
+>   // 是否master server
+>   if (in_array('--master', $args)) {
+>       define('WECARSWOOLE_MASTER', 1);
+>   }
+> ```

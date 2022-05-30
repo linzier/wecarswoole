@@ -51,5 +51,13 @@
 >        'crontab_server' => apollo('application', 'crontab_server') ?: '',
 >    ```
 > 框架新版本对此种仍然做了兼容，但新的程序不要通过这个配置来设置crontab了（在容器环境下无效）。
+>
+> 旧版本代码如果想要使用命令行模式，需要更新 wecarswoole 框架后，在入口文件 `easyswoole` 中加入如下一段代码：
+> ```php
+>    // 是否要启动定时任务
+>    if (in_array('--crontab', $args)) {
+>        define('WECARSWOOLE_CRON', 1);
+>    }
+> ```
 
 [返回](../README.md)
