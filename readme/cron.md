@@ -41,8 +41,6 @@
     1. 在服务启动命令中加入`--crontab` 参数，如：`php easyswoole start --env=test --crontab`；
     2. 设置系统环境变量：`export WECARSWOOLE_CRON=on`；
 
-定时任务启动后，会在 `storage/temp/` 下面生成 crontab.txt 文件；
-
 注意：定时任务同 Controller 一样也是**处理程序**，不能在里面直接写业务逻辑，业务逻辑同样需要在 Domain/ 中实现。
 
 > 注意：
