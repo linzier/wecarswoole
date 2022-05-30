@@ -39,6 +39,11 @@ class Sentinel extends WecarAbstractProcess
     public function beforeExec()
     {
         if ($this->onlyOnMaster) {
+            // 优先判断环境变量
+            if (self::hasMasterEnv()) {
+                goto last;
+            }
+
             $masterIp = Config::getInstance()->getConf('sentinel_server');
             if (!$masterIp || !in_array($masterIp, swoole_get_local_ip())) {
                 $this->canRun = false;
@@ -48,6 +53,7 @@ class Sentinel extends WecarAbstractProcess
             }
         }
 
+        last:
         parent::beforeExec();
     }
 
@@ -67,5 +73,21 @@ class Sentinel extends WecarAbstractProcess
             }
             Timer::tick($duration * 1000, \Closure::fromCallable($task));
         }
+    }
+
+    /**
+     * 是否设置了 master 环境变量
+     * 在容器模式下，无法通过ip来判断是否需要执行，我们通过环境变量来判断
+     * 此判断优先
+     * @return bool
+     */
+    private static function hasMasterEnv(): bool
+    {
+        $isMaster = getenv('WECARSWOOLE_MASTER');
+        if ($isMaster && trim($isMaster) == '1') {
+            return true;
+        }
+
+        return false;
     }
 }

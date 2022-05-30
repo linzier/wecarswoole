@@ -36,6 +36,11 @@ class CronTabUtil
         self::$createdCron = true;
 
         $tasks = $conf['tasks'] ?? $conf;// 新旧格式兼容
+
+        if (!$tasks) {
+            return;
+        }
+
         // 添加定时任务
         $crontab = WecarCrontab::getInstance(isset($conf['ip']) ? false : true);
         foreach ($tasks as $task) {
@@ -52,6 +57,11 @@ class CronTabUtil
      */
     public static function willRunCrontabOld(array $conf): bool
     {
+        // 优先判断环境变量
+        if (self::hasCronEnv()) {
+            return true;
+        }
+
         if (!isset($conf['ip']) || !$conf['ip']) {
             return false;
         }
@@ -75,11 +85,32 @@ class CronTabUtil
      */
     public static function willRunCrontabNew(): bool
     {
+        // 优先判断环境变量
+        if (self::hasCronEnv()) {
+            return true;
+        }
+
         $serverIp = Config::getInstance()->getConf('crontab_server');
         if (!$serverIp || !in_array($serverIp, swoole_get_local_ip())) {
             return false;
         }
 
         return true;
+    }
+
+    /**
+     * 是否设置了 crontab 环境变量
+     * 在容器模式下，无法通过ip来判断是否需要执行 crontab，我们通过环境变量来判断
+     * 此判断优先
+     * @return bool
+     */
+    private static function hasCronEnv(): bool
+    {
+        $on = getenv('WECARSWOOLE_CRON');
+        if ($on && strtolower(trim($on)) == 'on') {
+            return true;
+        }
+
+        return false;
     }
 }
