@@ -106,8 +106,14 @@ class CronTabUtil
      */
     private static function hasCronEnv(): bool
     {
+        // 先看环境变量
         $on = getenv('WECARSWOOLE_CRON');
         if ($on && strtolower(trim($on)) == 'on') {
+            return true;
+        }
+
+        // 看常量
+        if (defined('WECARSWOOLE_CRON') && WECARSWOOLE_CRON) {
             return true;
         }
 

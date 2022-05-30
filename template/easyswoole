@@ -58,6 +58,16 @@ if (in_array('-d', $args)) {
     $args[] = 'd';
 }
 
+// 是否要启动定时任务
+if (in_array('--crontab', $args)) {
+    define('WECARSWOOLE_CRON', 1);
+}
+
+// 是否master server
+if (in_array('--master', $args)) {
+    define('WECARSWOOLE_MASTER', 1);
+}
+
 // 是否调试模式
 !defined('DEBUG_MODEL') && define('DEBUG_MODEL', !in_array('d', $args) && in_array('--debug', $args));
 

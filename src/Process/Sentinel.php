@@ -83,8 +83,14 @@ class Sentinel extends WecarAbstractProcess
      */
     private static function hasMasterEnv(): bool
     {
+        // 先看环境变量
         $isMaster = getenv('WECARSWOOLE_MASTER');
         if ($isMaster && trim($isMaster) == '1') {
+            return true;
+        }
+
+        // 看常量
+        if (defined('WECARSWOOLE_MASTER') && WECARSWOOLE_MASTER) {
             return true;
         }
 
