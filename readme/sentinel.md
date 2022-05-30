@@ -5,14 +5,8 @@
 可以设置多个哨兵，如其中一个仅在主服上执行（如监控队列健康），另一个在所有服务器上执行（如需执行清空目录的任务）。
 
 ### 用法
-1. 在配置中心配置用于执行哨兵的服务器ip（如果所有的哨兵都需要在所有服务器执行，测无需配置）：
-```php
-...
-return [
-    'sentinel_server' => apollo('application', 'sentinel_server') ?: '',// 执行哨兵的服务器
-];
-```
-2. 在`EasySwooleEvent::mainServerCreate()`中添加哨兵：
+
+1. 在`EasySwooleEvent::mainServerCreate()`中添加哨兵：
 ```php
 public static function mainServerCreate(EventRegister $register)
 {
@@ -28,4 +22,20 @@ public static function mainServerCreate(EventRegister $register)
 }
 ```
 
+2. 如果哨兵是 onlyOnMaster 的，则有两种方式启动哨兵：
+    1. 命令行启动时加 `--master` 参数，如 `php easyswoole start --env=test --master`；
+    2. 设置系统环境变量：`export WECARSWOOLE_MASTER=1`；
+    
+3. 哨兵启动后，会在 `storage/temp/` 下面生成 `sentinel.txt` 文件；
+
 框架提供了`QueueMonitor`哨兵供监控队列，项目根据需要使用。
+
+> 注意：
+> 旧版本中是通过在配置中心配置用于执行哨兵的服务器ip（针对 onlyOnMaster 的哨兵）：
+>   ```php
+>   ...
+>   return [
+>       'sentinel_server' => apollo('application', 'sentinel_server') ?: '',// 执行哨兵的服务器
+>   ];
+>   ```
+> 框架对此仍然做了兼容，但新版本程序不要再使用此配置，该模式在容器下无效。

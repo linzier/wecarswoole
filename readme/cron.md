@@ -2,12 +2,7 @@
 
 同 linux 的 Crontab。
 
-- 在config/config.php配置需要执行crontab的服务器
-    ```php
-        'crontab_server' => apollo('application', 'crontab_server') ?: '',
-    ```
-
-- 类创建。在 app/Cron/ 下面创建定时任务处理程序类：
+- 在 app/Cron/ 下面创建定时任务处理程序类：
 
   ```php
   namespace App\Cron;
@@ -42,7 +37,19 @@
     ];
      ```
 
-> 注意：定时任务同 Controller 一样也是**处理程序**，不能在里面直接写业务逻辑，业务逻辑同样需要在 Domain/ 中实现。
+- 有两种方式启动定时任务：
+    1. 在服务启动命令中加入`--crontab` 参数，如：`php easyswoole start --env=test --crontab`；
+    2. 设置系统环境变量：`export WECARSWOOLE_CRON=on`；
 
+定时任务启动后，会在 `storage/temp/` 下面生成 crontab.txt 文件；
+
+注意：定时任务同 Controller 一样也是**处理程序**，不能在里面直接写业务逻辑，业务逻辑同样需要在 Domain/ 中实现。
+
+> 注意：
+> 老版本的程序是在config/config.php配置需要执行crontab的服务器：
+>    ```php
+>        'crontab_server' => apollo('application', 'crontab_server') ?: '',
+>    ```
+> 框架新版本对此种仍然做了兼容，但新的程序不要通过这个配置来设置crontab了（在容器环境下无效）。
 
 [返回](../README.md)

@@ -90,12 +90,13 @@ class CronTabUtil
             return true;
         }
 
+        // 根据ip判断（历史兼容，新版本不要通过ip判断了）
         $serverIp = Config::getInstance()->getConf('crontab_server');
-        if (!$serverIp || !in_array($serverIp, swoole_get_local_ip())) {
-            return false;
+        if ($serverIp && in_array($serverIp, swoole_get_local_ip())) {
+            return true;
         }
 
-        return true;
+        return false;
     }
 
     /**
