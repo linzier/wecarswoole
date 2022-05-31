@@ -64,6 +64,8 @@ class RequestRecordMiddleware implements IControllerMiddleware
         $respVal = (string)$response->getBody();
         $respVal = json_decode($respVal, true) ?? $respVal;
 
+        $response->getBody()->rewind();
+
         $uri = $request->getUri()->getPath() . '?' . $request->getUri()->getQuery();
         $context = [
             'params' => $request->getRequestParam(),
