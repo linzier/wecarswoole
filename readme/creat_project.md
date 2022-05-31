@@ -103,13 +103,16 @@
 
 ### 更新包文件
 
-1. 团队中某个成员在项目根目录下执行 `composer update vendor/package_name`，如 `composer update framework/wecarswoole`；
+1. 团队中某个成员在项目根目录下执行 `composer update vendor/package_name`，如 `composer update framework/wecarswoole --no-plugins`；
 2. 提交到 gitlab；
 3. 其他人 `git pull --rebase` 并执行 `composer install` 安装新的包；
 4. 开发完成，发布；
 
 > 注意：不要执行 `composer update` 一次更新所有包，要更新哪个就更新哪个。
 
+### 更新 wecarswoole 框架
+
+参照“更新包文件”。
 
 
 ### 移除不需要的包
