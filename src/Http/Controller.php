@@ -188,18 +188,43 @@ class Controller extends EsController
     protected function formatParams()
     {
         $contentType = $this->request()->getHeader('content-type')[0] ?? "form-data";
-        if ($contentType == 'application/json') {
-            // json 格式直接读取 raw 流
-            $body = $this->request()->getBody()->getContents();
-            $params = array_merge($this->request()->getQueryParams(), json_decode($body, true) ?: []);
-        } else {
-            $params = $this->request()->getRequestParam();
-            if (isset($params['data'])) {
-                $params = is_string($params['data']) ? json_decode($params['data'], true) : $params['data'];
-            }
+        switch ($contentType) {
+            case 'application/json':
+                // json 格式直接读取 raw 流并转成数组
+                $params = array_merge($this->request()->getQueryParams(), json_decode($this->getRawBody(), true) ?: []);
+                break;
+            case "application/xml":
+                // xml 格式直接读取 raw 流并转成数组
+                $xmlObj = simplexml_load_string($this->getRawBody());
+                $bodyArr = [];
+                if ($xmlObj !== false) {
+                    $bodyArr = json_decode(json_encode($xmlObj), true) ?: [];
+                }
+
+                $params = array_merge($this->request()->getQueryParams(), $bodyArr);
+                break;
+            default:
+                $params = $this->request()->getRequestParam();
+                // 很多内部系统用 data 做了一层封装，自动解包
+                if (isset($params['data'])) {
+                    $params = is_string($params['data']) ? json_decode($params['data'], true) : $params['data'];
+                }
         }
         
         $this->requestParams = $params;
+    }
+
+    /**
+     * 获取原始 body 数据
+     */
+    public function getRawBody(): string
+    {
+        $stream = $this->request()->getBody();
+        $stream->rewind();
+        $body = $stream->getContents();
+        $stream->rewind();
+
+        return $body;
     }
 
     /**
