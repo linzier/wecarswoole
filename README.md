@@ -32,7 +32,7 @@ WecarSwoole 是基于 EasySwoole 开发的适用于喂车业务系统的 Web 开
 - [错误码](./readme/error_code.md)
 - [路由](./readme/route.md)
 - [控制器](./readme/controller.md)
-- - [请求参数](./readme/request_params.md)
+- [请求参数](./readme/request_params.md)
 - 领域
     - [领域事件](./readme/event.md)
     
