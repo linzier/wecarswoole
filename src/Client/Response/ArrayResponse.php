@@ -29,10 +29,10 @@ abstract class ArrayResponse extends Response
 
     /**
      * 解析body
-     * @param string $origBody
+     * @param string|array $origBody
      * @return mixed 正常情况下返回解析后的数组，解析失败返回null
      */
-    abstract protected function decodeBody(string $origBody);
+    abstract protected function decodeBody($origBody);
 
     /**
      * 获取接口返回的业务数据

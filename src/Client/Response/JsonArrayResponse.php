@@ -4,8 +4,16 @@ namespace WecarSwoole\Client\Response;
 
 class JsonArrayResponse extends ArrayResponse
 {
-    protected function decodeBody(string $origBody)
+    protected function decodeBody($origBody)
     {
-        return json_decode($origBody, true);
+        if (is_array($origBody)) {
+            return $origBody;
+        }
+
+        if (!$origBody) {
+            return [];
+        }
+
+        return json_decode($origBody, true) ?: [];
     }
 }
