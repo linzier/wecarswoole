@@ -17,11 +17,23 @@ return [
     ],
     // api 定义
     'api' => [
-        // 不要删这个，告警短信用到
+        // 不要删这个，框架告警短信用到
         'sms.send' => [
             'server' => 'DX',
             'path' => 'v1.0/sms/send',
             'method' => 'POST'
-        ]
+        ],
+        // 如果要用到 sso 登录，请不要删这个，框架 sso 登录需要用到
+        'sso.login' => [
+            'server' => 'DL',
+            'path' => '/v1/ticket/verify',
+            'method' => 'GET'
+        ],
+        // 如果要用到 sso 登录，请不要删这个，框架 sso 登录需要用到
+        'sso.logout' => [
+            'server' => 'DL',
+            'path' => '/v1/logout',
+            'method' => 'POST'
+        ],
     ]
 ];

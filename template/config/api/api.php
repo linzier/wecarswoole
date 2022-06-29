@@ -40,5 +40,6 @@ return [
         'default_retry_num' => 2,
     ],
     // 组
+    // weicheche 这个组不要删掉，也不要改名字，框架里面有用到这个组名称
     'weicheche' => include_once __DIR__ . '/weicheche.php'
 ];

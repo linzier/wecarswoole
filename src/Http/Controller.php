@@ -390,6 +390,7 @@ class Controller extends EsController
      * @param string $ssoCode
      * @return array 返回用户基本信息
      * @throws \Exception
+     * @throws \Throwable
      */
     protected function ssoLogin(string $ssoCode): array
     {
@@ -404,7 +405,7 @@ class Controller extends EsController
         }
 
         // 请求 sso 换取 ticket
-        $response = API::retrySimpleInvoke($ssoUrl, 'GET', ['type' => 'code', 'code' => $ssoCode]);
+        $response = API::invoke("weicheche:sso.login", ['type' => 'code', 'code' => $ssoCode]);
         if (!$response->isBusinessOk() || !$response->getBody('data')) {
             throw new \Exception("sso login fail:" . $response->getBusinessError(), ErrCode::AUTH_FAIL);
         }
@@ -430,6 +431,7 @@ class Controller extends EsController
     /**
      * 集成 sso 退出登录
      * @throws \Exception
+     * @throws \Throwable
      */
     protected function ssoLogout()
     {
@@ -449,7 +451,7 @@ class Controller extends EsController
         }
 
         // 删除 sso 的会话
-        $response = API::retrySimpleInvoke($ssoLogoutUrl, "POST", ['ticket' => $ticket]);
+        $response = API::invoke("weicheche:sso.logout", ['ticket' => $ticket]);
         if (!$response->isBusinessOk()) {
             throw new \Exception("sso退出登录失败:" . $response->getBusinessError(), ErrCode::API_INVOKE_FAIL);
         }

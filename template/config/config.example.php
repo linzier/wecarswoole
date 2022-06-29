@@ -129,10 +129,6 @@ $baseConfig = [
     'jwt_expire' => apollo('application', 'jwt_expire') ?? 3600 * 3,
     // jwt 内容加密用的 secret，留空则不加密
     'jwt_secret' => apollo('application', 'jwt_secret') ?? '',
-    // 公司单点登录系统登录 url（根据 code 获取 ticket 的 url）
-    'sso_login_url' => apollo('application', 'sso_login_url'),
-    // 单点登录退出登录 url
-    'sso_logout_url' => apollo('application', 'sso_logout_url'),
     /**
      * 输入安全
      */
