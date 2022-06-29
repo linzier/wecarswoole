@@ -479,10 +479,6 @@ class Controller extends EsController
      */
     private function buildJWTToken(array $data): string
     {
-        if (!$data) {
-            return '';
-        }
-
         // 从配置中心获取配置信息
         $conf = Config::getInstance();
         $signKey = $conf->getConf('jwt_sign_key');
@@ -491,9 +487,19 @@ class Controller extends EsController
             throw new \Exception("build token fail:jwt sign key required", ErrCode::PARAM_VALIDATE_FAIL);
         }
 
+        $expire = isset($data['exp']) ? $data['exp']->getTimestamp() : $conf->getConf('jwt_expire');
+
+        // 剔除掉 jwt 关键字
+        $data = array_filter($data, function ($key) {
+            return !in_array($key, ['iss', 'exp', 'sub', 'aud', 'nbf', 'iat', 'jti']);
+        }, ARRAY_FILTER_USE_KEY);
+
+        if (!$data) {
+            return '';
+        }
+
         $config = Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($signKey));
         $now = new DateTimeImmutable();
-        $expire = $data['exp'] ?? $conf->getConf('jwt_expire');
         $builder = $config->builder()
             ->issuedBy('weicheche.cn')
             ->issuedAt($now)
