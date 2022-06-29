@@ -243,11 +243,11 @@ class Controller
 
 不同的是：每个第三方一般要有自己的 appid 和 secret，所以不能在配置文件中写死 secret，而是要用数据库/Redis 保存。
 
-因而第三方 jwt 鉴权不能用默认的 `WecarSwoole\Http\Middlewares\JWTAuthMiddleware`鉴权中间件，要继承该类实现自己的中间件，从而实现自己的路由器。如：
+因而第三方 jwt 认证不能用默认的 `WecarSwoole\Http\Middlewares\JWTAuthMiddleware`认证中间件，要继承该类实现自己的中间件，从而实现自己的路由器。如：
 ```php
 
 ...
-
+// 实现自定义认证中间件
 class MyJWTAuthMiddleware extends JWTAuthMiddleware
 {
     // 重写获取 key 的方法
@@ -260,6 +260,26 @@ class MyJWTAuthMiddleware extends JWTAuthMiddleware
         return [$signKey, ""];
     }
 } 
+```
+
+实现自己的路由器（放在 app/Http/Routes/ 文件夹下）：
+```php
+...
+// 定义自己的路由器，使用上面的中间件
+class ThirdJWTRoute extends Route
+{
+    public function __construct(RouteCollector $collector)
+    {
+        $this->appendMiddlewares(MyJWTAuthMiddleware::class);
+
+        parent::__construct($collector);
+    }
+    
+    public function map()
+    {
+        ...
+    }
+}
 ```
 
 ### 加密
