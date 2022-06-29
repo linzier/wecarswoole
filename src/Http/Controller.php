@@ -134,6 +134,7 @@ class Controller extends EsController
     /**
      * 请求执行后
      * @param null|string $action
+     * @throws \Exception
      */
     protected function afterAction(?string $action): void
     {
@@ -454,6 +455,7 @@ class Controller extends EsController
 
     /**
      * 将 session 保存到 jwt 响应头
+     * @throws \Exception
      */
     private function storeSession()
     {
@@ -462,10 +464,14 @@ class Controller extends EsController
             return;
         }
 
-        $token = $this->buildJWTToken($session);
-        $this->response()->withHeader("Auth-Token", $token);
+        $this->response()->withHeader("Auth-Token", $this->buildJWTToken($session));
     }
 
+    /**
+     * @param array $data
+     * @return string
+     * @throws \Exception
+     */
     private function buildJWTToken(array $data): string
     {
         if (!$data) {
@@ -477,7 +483,7 @@ class Controller extends EsController
         $signKey = $conf->getConf('jwt_sign_key');
 
         if (!$signKey) {
-            return '';
+            throw new \Exception("build token fail:jwt sign key required", ErrCode::PARAM_VALIDATE_FAIL);
         }
 
         $config = Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($signKey));
