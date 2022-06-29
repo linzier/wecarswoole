@@ -352,6 +352,14 @@ class Controller extends EsController
     private function getSession(string $key)
     {
         $session = $this->requestParams['__session__'] ?? [];
+        // 剔除掉 __ 开头的特殊字段
+        $session = array_filter(
+            $session,
+            function ($key) {
+                return strpos($key, '__') !== 0;
+            },
+            ARRAY_FILTER_USE_KEY
+        );
         if ($key === '') {
             return $session;
         }
@@ -487,11 +495,11 @@ class Controller extends EsController
             throw new \Exception("build token fail:jwt sign key required", ErrCode::PARAM_VALIDATE_FAIL);
         }
 
-        $expire = isset($data['exp']) ? $data['exp']->getTimestamp() : $conf->getConf('jwt_expire');
+        $expire = isset($data['__exp']) ? $data['__exp'] : $conf->getConf('jwt_expire');
 
         // 剔除掉 jwt 关键字
         $data = array_filter($data, function ($key) {
-            return !in_array($key, ['iss', 'exp', 'sub', 'aud', 'nbf', 'iat', 'jti']);
+            return !in_array($key, ['iss', 'exp', 'sub', 'aud', 'nbf', 'iat', 'jti', '__exp']);
         }, ARRAY_FILTER_USE_KEY);
 
         if (!$data) {

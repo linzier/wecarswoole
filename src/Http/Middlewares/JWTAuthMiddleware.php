@@ -63,7 +63,15 @@ class JWTAuthMiddleware implements IRouteMiddleware
 
         // jwt 认证成功，将 payload 嵌入到请求参数中
         $pBody = $request->getParsedBody() ?? [];
-        $pBody['__session__'] = $token->claims()->all();
+        $claims = $token->claims()->all();
+        $claims['__exp'] = $claims['exp']->getTimestamp();
+        $pBody['__session__'] = array_filter(
+            $claims,
+            function ($key) {
+                return !in_array($key, ['iss', 'exp', 'sub', 'aud', 'nbf', 'iat', 'jti']);
+            },
+            ARRAY_FILTER_USE_KEY
+        );
         $request->withParsedBody($pBody);
 
         return $next($request, $response);
