@@ -16,7 +16,8 @@
         "dev/locker": "^1.0",
         "dev/mysql": "^1.0",
         "easyswoole/queue": "2.*",
-        "lcobucci/jwt": "^4.1"
+        "lcobucci/jwt": "^4.1",
+        "ezyang/htmlpurifier": "^4.14"
     },
     "repositories": {
         "0": {
