@@ -86,8 +86,8 @@ class JWTAuthMiddleware implements IRouteMiddleware
     protected function extractJWTToken(string $token, string $key): ?Token
     {
         $config = Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($key));
-        $config->setValidationConstraints(new SignedWith($config->signer(), $config->signingKey()));
         $config->setValidationConstraints(
+            new SignedWith($config->signer(), $config->signingKey()),
             new StrictValidAt(
                 new FrozenClock(new \DateTimeImmutable()),
                 \DateInterval::createFromDateString("60 seconds")
