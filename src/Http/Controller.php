@@ -134,12 +134,16 @@ class Controller extends EsController
     /**
      * 请求执行后
      * @param null|string $action
-     * @throws \Exception
+     * @throws \Throwable
      */
     protected function afterAction(?string $action): void
     {
         // 记录 session
-        $this->storeSession();
+        try {
+            $this->storeSession();
+        } catch (\Throwable $e) {
+            $this->onException($e);
+        }
 
         if ($this->responseData) {
             $this->response()->write(
