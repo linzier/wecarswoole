@@ -298,26 +298,48 @@ class Controller extends EsController
      *      $this->session($key): 获取 session[$key]
      * 设置 session
      *      $this->session($key, $vals): 设置 $vals 数组里面的值到 session 中
-     * @param string $key
-     * @param null $vals
+     * @param string|array $keyOrVals
+     * @param null $val
      * @return array|mixed|null|void
      * @throws \Exception
      */
-    protected function session(string $key = '', $vals = null)
+    protected function session($keyOrVals = '', $val = null)
     {
-        // 排除 jwt 关键字
-        if (in_array($key, ['iss', 'exp', 'sub', 'aud', 'nbf', 'iat', 'jti'])) {
-            throw new \Exception("禁止获取/设置 jwt 关键字:{$key}", ErrCode::INVALID_ACCESS);
+        // 批量设置 session
+        if (is_array($keyOrVals)) {
+            $this->innerUpdateSession($keyOrVals);
+            return;
         }
 
-        if ($vals === null) {
+        if ($val === null) {
             // 获取 session
-            return $this->getSession($key);
+            return $this->getSession($keyOrVals);
         }
 
         // 设置 session
+        $this->innerUpdateSession([$keyOrVals => $val]);
+    }
+
+    /**
+     * @param array $arr
+     * @throws \Exception
+     */
+    private function innerUpdateSession(array $arr)
+    {
+        if (!$arr) {
+            $this->requestParams['__session__'] = [];
+            return;
+        }
+
         $session = $this->requestParams['__session__'] ?? [];
-        $session[$key] = $vals;
+        foreach ($arr as $k => $v) {
+            if (in_array($k, ['iss', 'exp', 'sub', 'aud', 'nbf', 'iat', 'jti'])) {
+                throw new \Exception("禁止获取/设置 jwt 关键字:{$k}", ErrCode::INVALID_ACCESS);
+            }
+
+            $session[$k] = $v;
+        }
+
         $this->requestParams['__session__'] = $session;
     }
 
@@ -384,10 +406,7 @@ class Controller extends EsController
         $expire = $data['expire'];
 
         // 生成 session
-        foreach ($loginer as $k => $v) {
-            $this->session($k, $v);
-        }
-
+        $this->session($loginer);
         $this->session('__ticket', $ticket);
         $this->requestParams['__session__']['exp'] = $expire;
 
