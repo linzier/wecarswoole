@@ -34,8 +34,8 @@ class JWTAuthMiddleware implements IRouteMiddleware
     public function handle(Next $next, Request $request, Response $response)
     {
         // 可通过配置跳过校验（一般用来做临时测试用）
-        $auth = Config::getInstance()->getConf("jwt_auth_on") ?: 1;
-        if (!intval($auth)) {
+        $auth = intval(Config::getInstance()->getConf("jwt_auth_on") ?? 1);
+        if (!$auth) {
             return $next($request, $response);
         }
 
@@ -89,7 +89,7 @@ class JWTAuthMiddleware implements IRouteMiddleware
             new SignedWith($config->signer(), $config->signingKey()),
             new StrictValidAt(
                 new FrozenClock(new \DateTimeImmutable()),
-                \DateInterval::createFromDateString("60 seconds")
+                \DateInterval::createFromDateString("30 seconds")
             )
         );
 

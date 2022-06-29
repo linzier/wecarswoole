@@ -6,8 +6,7 @@ class Encrypt
 {
     public static function enc(string $txt, string $secret): string
     {
-        $iv = openssl_random_pseudo_bytes(openssl_cipher_iv_length("AES-128-CBC"));
-        $enc = openssl_encrypt($txt, "AES-128-CBC", $secret, OPENSSL_RAW_DATA, $iv);
+        $enc = openssl_encrypt($txt, "AES-128-CBC", $secret, OPENSSL_RAW_DATA);
         if (!$enc) {
             return '';
         }
@@ -17,8 +16,7 @@ class Encrypt
 
     public static function dec(string $txt, string $secret): string
     {
-        $iv = openssl_random_pseudo_bytes(openssl_cipher_iv_length("AES-128-CBC"));
-        $dec = openssl_decrypt(base64_decode($txt), "AES-128-CBC", $secret, OPENSSL_RAW_DATA, $iv);
+        $dec = openssl_decrypt(base64_decode($txt), "AES-128-CBC", $secret, OPENSSL_RAW_DATA);
         if (!$dec) {
             return '';
         }
