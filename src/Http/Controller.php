@@ -15,7 +15,11 @@ use WecarSwoole\ErrCode;
 use WecarSwoole\RedisFactory;
 use WecarSwoole\Middleware\MiddlewareHelper;
 use WecarSwoole\Exceptions\{EmergencyErrorException, CriticalErrorException, Exception, ValidateException};
-use WecarSwoole\Http\Middlewares\{LockerMiddleware, RequestRecordMiddleware, RequestTimeMiddleware, ValidateMiddleware};
+use WecarSwoole\Http\Middlewares\{InputFilterMiddleware,
+    LockerMiddleware,
+    RequestRecordMiddleware,
+    RequestTimeMiddleware,
+    ValidateMiddleware};
 use Dev\MySQL\Exception\DBException;
 use EasySwoole\Validate\Validate;
 use WecarSwoole\Util\Encrypt;
@@ -46,6 +50,7 @@ class Controller extends EsController
             [
                 new LockerMiddleware($this),
                 new RequestRecordMiddleware(),
+                new InputFilterMiddleware($this),
                 new ValidateMiddleware($this),
                 new RequestTimeMiddleware(RedisFactory::build('main'), Container::get(LoggerInterface::class)),
             ]

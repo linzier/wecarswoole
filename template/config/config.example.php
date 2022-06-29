@@ -133,6 +133,15 @@ $baseConfig = [
     'sso_login_url' => apollo('application', 'sso_login_url'),
     // 单点登录退出登录 url
     'sso_logout_url' => apollo('application', 'sso_logout_url'),
+    /**
+     * 输入安全
+     */
+    // xss 攻击防御
+    // 如果系统接受用户输入，则强烈建议开启；如果仅由其他系统调用，且调用参数可控，则可不开启
+    // 默认关闭。因为很多系统是作为服务供其他系统调用，无需开启（开启后会些许影响性能）
+    'xss_filter' => apollo('application', 'xss_filter_on') ?? 0,
+    // 去除输入参数的首尾空格
+    'trim_whitespace' => apollo('application', 'trim_whitespace') ?? 1,
 ];
 
 return array_merge(
