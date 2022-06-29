@@ -19,4 +19,5 @@ class ErrCode
     public const AUTH_FAIL = 301;// 鉴权失败
     public const CONC_EXEC_FAIL = 302;// 并发执行异常
     public const API_INVOKE_FAIL = 303;// 接口调用异常（可能是传输层异常也可能是业务处理异常）
+    public const INVALID_ACCESS = 304;// 非法访问
 }

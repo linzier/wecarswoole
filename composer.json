@@ -15,7 +15,8 @@
         "psr/simple-cache": "^1.0",
         "dev/locker": "^1.0",
         "dev/mysql": "^1.0",
-        "easyswoole/queue": "2.*"
+        "easyswoole/queue": "2.*",
+        "lcobucci/jwt": "^4.1"
     },
     "repositories": {
         "0": {

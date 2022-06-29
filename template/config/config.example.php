@@ -97,17 +97,42 @@ $baseConfig = [
     ],
     // 缓存配置
     'cache' => [
-        'driver' => apollo('application', 'cache.driver'), // 可用：redis、file、array、null(一般测试时用来禁用缓存)
+        // 可用：redis、file、array、null(一般测试时用来禁用缓存)
+        'driver' => apollo('application', 'cache.driver'),
         'prefix' => 'usercenter',
-        'expire' => 3600, // 缓存默认过期时间，单位秒
-        'redis' => 'cache', // 当 driver = redis 时，使用哪个 redis 配置
-        'dir' => File::join(EASYSWOOLE_ROOT, 'storage/cache'), // 当 driver = file 时，缓存存放目录
+        // 缓存默认过期时间，单位秒
+        'expire' => 3600,
+        // 当 driver = redis 时，使用哪个 redis 配置
+        'redis' => 'cache',
+        // 当 driver = file 时，缓存存放目录
+        'dir' => File::join(EASYSWOOLE_ROOT, 'storage/cache'),
     ],
     // 最低记录级别：debug, info, warning, error, critical, off
     'log_level' => apollo('application', 'log_level') ?: 'info',
     'base_url' => apollo('application', 'base_url'),
-    'sql_log' => apollo('application', 'sql_log') ?: 'off',// 是否开启 SQL 日志（日志级别是info）
+    // 是否开启 SQL 日志（日志级别是info）
+    'sql_log' => apollo('application', 'sql_log') ?: 'off',
     'max_log_file_size' => apollo('application', 'max_log_file_size') ?: WecarFileHandler::DEFAULT_FILE_SIZE,
+    // 是否对相关接口进行 token 校验（继承 ApiRoute 的接口）。默认需要验证，此参数主要用来临时取消验证进行测试
+    'auth_request' => apollo('application', 'auth_request') ?? 1,
+    /**
+     * 登录会话相关
+     */
+    // 是否开启 jwt 认证（继承 JWTRoute 的接口）
+    'jwt_auth_on' => apollo('application', 'jwt_auth_on') ?? 1,
+    // jwt 签名用的 key，需要保证足够的强度
+    // PHP7 以上建议用 bin2hex(random_bytes(32)) 生成
+    'jwt_sign_key' => apollo('application', 'jwt_sign_key') ?? '',
+    // 是否对 jwt 串加密。需配合 jwt_secret 使用，没提供 jwt_secret 则一定不加密
+    'jwt_encrypt_on' => apollo('application', 'jwt_encrypt_on') ?? 1,
+    // jwt token 过期时间
+    'jwt_expire' => apollo('application', 'jwt_expire') ?? 3600 * 3,
+    // jwt 内容加密用的 secret，留空则不加密
+    'jwt_secret' => apollo('application', 'jwt_secret') ?? '',
+    // 公司单点登录系统登录 url（根据 code 获取 ticket 的 url）
+    'sso_login_url' => apollo('application', 'sso_login_url'),
+    // 单点登录退出登录 url
+    'sso_logout_url' => apollo('application', 'sso_logout_url'),
 ];
 
 return array_merge(

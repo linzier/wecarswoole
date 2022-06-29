@@ -2,8 +2,14 @@
 
 namespace WecarSwoole\Http;
 
+use DateTimeImmutable;
+use EasySwoole\EasySwoole\Config;
+use Lcobucci\JWT\Configuration;
+use Lcobucci\JWT\Signer\Hmac\Sha256;
+use Lcobucci\JWT\Signer\Key\InMemory;
 use Psr\Log\LoggerInterface;
 use EasySwoole\Http\AbstractInterface\Controller as EsController;
+use WecarSwoole\Client\API;
 use WecarSwoole\Container;
 use WecarSwoole\ErrCode;
 use WecarSwoole\RedisFactory;
@@ -12,6 +18,7 @@ use WecarSwoole\Exceptions\{EmergencyErrorException, CriticalErrorException, Exc
 use WecarSwoole\Http\Middlewares\{LockerMiddleware, RequestRecordMiddleware, RequestTimeMiddleware, ValidateMiddleware};
 use Dev\MySQL\Exception\DBException;
 use EasySwoole\Validate\Validate;
+use WecarSwoole\Util\Encrypt;
 
 /**
  * 控制器基类
@@ -26,6 +33,7 @@ class Controller extends EsController
 
     protected $responseData;
     protected $requestParams;
+    protected $_session;
 
     /**
      * Controller constructor.
@@ -124,6 +132,9 @@ class Controller extends EsController
      */
     protected function afterAction(?string $action): void
     {
+        // 记录 session
+        $this->storeSession();
+
         if ($this->responseData) {
             $this->response()->write(
                 is_array($this->responseData)
@@ -188,10 +199,11 @@ class Controller extends EsController
     protected function formatParams()
     {
         $contentType = $this->request()->getHeader('content-type')[0] ?? "form-data";
+        $extractData = false;
         switch ($contentType) {
             case 'application/json':
                 // json 格式直接读取 raw 流并转成数组
-                $params = array_merge($this->request()->getQueryParams(), json_decode($this->getRawBody(), true) ?: []);
+                $params = json_decode($this->getRawBody(), true) ?: [];
                 break;
             case "application/xml":
                 // xml 格式直接读取 raw 流并转成数组
@@ -201,16 +213,21 @@ class Controller extends EsController
                     $bodyArr = json_decode(json_encode($xmlObj), true) ?: [];
                 }
 
-                $params = array_merge($this->request()->getQueryParams(), $bodyArr);
+                $params = $bodyArr;
                 break;
             default:
-                $params = $this->request()->getRequestParam();
-                // 很多内部系统用 data 做了一层封装，自动解包
-                if (isset($params['data'])) {
-                    $params = is_string($params['data']) ? json_decode($params['data'], true) : $params['data'];
+                if ($this->request()->getMethod() == "POST") {
+                    $extractData = true;
                 }
+                break;
         }
-        
+
+        $params = array_merge($params ?? [], $this->request()->getRequestParam());
+        // 很多内部系统用 data 做了一层封装，自动解包
+        if ($extractData && isset($params['data'])) {
+            $params = is_string($params['data']) ? json_decode($params['data'], true) : $params['data'];
+        }
+
         $this->requestParams = $params;
     }
 
@@ -258,9 +275,224 @@ class Controller extends EsController
 
     /**
      * 重写 validate 方法：验证处理后的数据（因为请求端可能是把请求数据放在 data 里面）
+     * @param Validate $validate
+     * @return bool
      */
     protected function validate(Validate $validate)
     {
         return $validate->validate($this->params());
+    }
+
+    /**
+     * 获取或者设置 session
+     * 由于 session 是存在 jwt 中，不要存太多东西到 session 中
+     * 禁止获取/设置 jwt 关键字，防止造成意料之外的错误
+     *
+     * 获取 session：
+     *      $this->session(): 获取所有 session 值，返回 session 数组
+     *      $this->session($key): 获取 session[$key]
+     * 设置 session
+     *      $this->session($key, $vals): 设置 $vals 数组里面的值到 session 中
+     * @param string $key
+     * @param null $vals
+     * @return array|mixed|null|void
+     * @throws \Exception
+     */
+    protected function session(string $key = '', $vals = null)
+    {
+        // 排除 jwt 关键字
+        if (in_array($key, ['iss', 'exp', 'sub', 'aud', 'nbf', 'iat', 'jti'])) {
+            throw new \Exception("禁止获取/设置 jwt 关键字:{$key}", ErrCode::INVALID_ACCESS);
+        }
+
+        if ($vals === null) {
+            // 获取 session
+            return $this->getSession($key);
+        }
+
+        // 设置 session
+        $session = $this->requestParams['__session__'] ?? [];
+        $session[$key] = $vals;
+        $this->requestParams['__session__'] = $session;
+    }
+
+    private function getSession(string $key)
+    {
+        $session = $this->requestParams['__session__'] ?? [];
+        if ($key === '') {
+            return $session;
+        }
+
+        return $session[$key] ?? null;
+    }
+
+    /**
+     * 删除某个 session 值
+     * @param string $key
+     * @throws \Exception
+     */
+    protected function deleteSession(string $key)
+    {
+        if (in_array($key, ['iss', 'exp', 'sub', 'aud', 'nbf', 'iat', 'jti'])) {
+            throw new \Exception("禁止删除 jwt 关键字:{$key}", ErrCode::INVALID_ACCESS);
+        }
+
+        $session = $this->requestParams['__session__'] ?? [];
+        if (isset($session[$key])) {
+            unset($session[$key]);
+            $this->requestParams['__session__'] = $session;
+        }
+    }
+
+    /**
+     * 集成 sso，基于公司的 sso 系统登录
+     * @param string $ssoCode
+     * @return array 返回用户基本信息
+     * @throws \Exception
+     */
+    protected function ssoLogin(string $ssoCode): array
+    {
+        if (!$ssoCode) {
+            throw new \Exception("sso code required", ErrCode::AUTH_FAIL);
+        }
+
+        $conf = Config::getInstance();
+        $ssoUrl = $conf->getConf('sso_login_url');
+        if (!$ssoUrl) {
+            throw new \Exception("sso login url required", ErrCode::AUTH_FAIL);
+        }
+
+        // 请求 sso 换取 ticket
+        $response = API::retrySimpleInvoke($ssoUrl, 'GET', ['type' => 'code', 'code' => $ssoCode]);
+        if (!$response->isBusinessOk() || !$response->getBody('data')) {
+            throw new \Exception("sso login fail:" . $response->getBusinessError(), ErrCode::AUTH_FAIL);
+        }
+
+        $data = $response->getBody('data');
+        $loginer = [
+            'uid' => $data['loginer']['id'],
+            'account' => $data['loginer']['username'],
+            'name' => $data['loginer']['name'],
+            'phone' => $data['loginer']['phone'],
+        ];
+        $ticket = $data['ticket'];
+        $expire = $data['expire'];
+
+        // 生成 session
+        foreach ($loginer as $k => $v) {
+            $this->session($k, $v);
+        }
+
+        $this->session('__ticket', $ticket);
+        $this->requestParams['__session__']['exp'] = $expire;
+
+        return $loginer;
+    }
+
+    /**
+     * 集成 sso 退出登录
+     * @throws \Exception
+     */
+    protected function ssoLogout()
+    {
+        if (!$session = $this->requestParams['__session__']) {
+            return;
+        }
+
+        $ticket = $session['__ticket'] ?? '';
+        $ssoLogoutUrl = Config::getInstance()->getConf('sso_logout_url');
+
+        if (!$ticket) {
+            return;
+        }
+
+        if (!$ssoLogoutUrl) {
+            throw new \Exception("sso logout url required", ErrCode::PARAM_VALIDATE_FAIL);
+        }
+
+        // 删除 sso 的会话
+        $response = API::retrySimpleInvoke($ssoLogoutUrl, "POST", ['ticket' => $ticket]);
+        if (!$response->isBusinessOk()) {
+            throw new \Exception("sso退出登录失败:" . $response->getBusinessError(), ErrCode::API_INVOKE_FAIL);
+        }
+
+        // 删除本地会话
+        $this->destroySession();
+    }
+
+    /**
+     * 销毁会话上下文（退出登录）
+     */
+    protected function destroySession()
+    {
+        $this->requestParams['__session__'] = null;
+    }
+
+    /**
+     * 将 session 保存到 jwt 响应头
+     */
+    protected function storeSession()
+    {
+        if (!$session = $this->requestParams['__session__'] ?? null) {
+            $this->response()->withHeader("Auth-Token", "");
+            return;
+        }
+
+        $token = $this->buildJWTToken($session);
+        $this->response()->withHeader("Auth-Token", $token);
+    }
+
+    protected function buildJWTToken(array $data): string
+    {
+        if (!$data) {
+            return '';
+        }
+
+        // 从配置中心获取配置信息
+        $conf = Config::getInstance();
+        $signKey = $conf->getConf('jwt_sign_key');
+
+        if (!$signKey) {
+            return '';
+        }
+
+        $config = Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($signKey));
+        $now = new DateTimeImmutable();
+        $expire = $data['exp'] ?: $conf->getConf('jwt_expire');
+        $builder = $config->builder()
+            ->issuedBy('weicheche.cn')
+            ->issuedAt($now)
+            ->canOnlyBeUsedAfter($now)
+            ->expiresAt($now->modify("+{$expire} second"));
+
+        foreach ($data as $k => $v) {
+            $builder->withClaim($k, $v);
+        }
+
+        $token = $builder->getToken($config->signer(), $config->signingKey())->toString();
+
+        // 加密
+        $secret = intval($conf->getConf('jwt_encrypt_on')) ? $conf->getConf('jwt_secret') : '';
+        if ($secret) {
+            $token = $this->encryptJWTToken($token, $secret);
+        }
+
+        return $token;
+    }
+
+    protected function encryptJWTToken(string $token, string $secret): string
+    {
+        if (!$token) {
+            return '';
+        }
+
+        $token = explode('.', $token);
+        if (count($token) != 3) {
+            return '';
+        }
+
+        $token[1] = Encrypt::enc($token[1], $secret);
+
+        return implode('.', $token);
     }
 }
