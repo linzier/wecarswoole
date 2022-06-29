@@ -3,7 +3,7 @@
 2. 第三方调动时的身份认证；
 
 ### JWT 介绍
-参见[官网：](https://jwt.io/introduction)。
+参见[官网](https://jwt.io/introduction)。
 
 ### 其他介绍文章
 参见[接口设计的那些事](https://www.cnblogs.com/linvanda/p/16053236.html)，本文详细介绍了接口设计的方方面面，其中涉及到前后端安全交互的章节有讨论 JWT 和前后端分离情况下的登录认证流程。
