@@ -436,7 +436,7 @@ class Controller extends EsController
     /**
      * 将 session 保存到 jwt 响应头
      */
-    protected function storeSession()
+    private function storeSession()
     {
         if (!$session = $this->requestParams['__session__'] ?? null) {
             $this->response()->withHeader("Auth-Token", "");
@@ -447,7 +447,7 @@ class Controller extends EsController
         $this->response()->withHeader("Auth-Token", $token);
     }
 
-    protected function buildJWTToken(array $data): string
+    private function buildJWTToken(array $data): string
     {
         if (!$data) {
             return '';
@@ -485,7 +485,7 @@ class Controller extends EsController
         return $token;
     }
 
-    protected function encryptJWTToken(string $token, string $secret): string
+    private function encryptJWTToken(string $token, string $secret): string
     {
         if (!$token) {
             return '';

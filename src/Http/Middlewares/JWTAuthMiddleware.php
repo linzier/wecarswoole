@@ -34,7 +34,7 @@ class JWTAuthMiddleware implements IRouteMiddleware
     public function handle(Next $next, Request $request, Response $response)
     {
         // 可通过配置跳过校验（一般用来做临时测试用）
-        $auth = Config::getInstance()->getConf("jwt_auth_on");
+        $auth = Config::getInstance()->getConf("jwt_auth_on") ?: 1;
         if (!intval($auth)) {
             return $next($request, $response);
         }
