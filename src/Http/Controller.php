@@ -199,7 +199,7 @@ class Controller extends EsController
             $logger->error($message, $context);
         }
 
-        $this->return($data, $throwable->getCode() ?: ErrCode::ERROR, $displayMsg, $retry);
+        $this->return($data, $throwable->getCode() ?: ErrCode::ERROR, $displayMsg, $retry, true);
     }
 
     protected function formatParams()
@@ -266,12 +266,13 @@ class Controller extends EsController
      * @param int $status
      * @param string $msg
      * @param int $retry 告诉客户端是否需要重试
+     * @param bool $force
      * @return bool
      */
-    protected function return($data = [], int $status = 200, string $msg = '', int $retry = 0): bool
+    protected function return($data = [], int $status = 200, string $msg = '', int $retry = 0, bool $force = false): bool
     {
         // 只能调用一次
-        if ($this->responseData) {
+        if ($this->responseData && !$force) {
             return false;
         }
 
