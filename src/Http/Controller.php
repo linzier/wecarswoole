@@ -398,12 +398,6 @@ class Controller extends EsController
             throw new \Exception("sso code required", ErrCode::AUTH_FAIL);
         }
 
-        $conf = Config::getInstance();
-        $ssoUrl = $conf->getConf('sso_login_url');
-        if (!$ssoUrl) {
-            throw new \Exception("sso login url required", ErrCode::AUTH_FAIL);
-        }
-
         // 请求 sso 换取 ticket
         $response = API::invoke("weicheche:sso.login", ['type' => 'code', 'code' => $ssoCode]);
         if (!$response->isBusinessOk() || !$response->getBody('data')) {
@@ -438,16 +432,9 @@ class Controller extends EsController
         if (!$session = $this->requestParams['__session__']) {
             return;
         }
-
-        $ticket = $session['__ticket'] ?? '';
-        $ssoLogoutUrl = Config::getInstance()->getConf('sso_logout_url');
-
-        if (!$ticket) {
+        
+        if (!$ticket = $session['__ticket'] ?? '') {
             return;
-        }
-
-        if (!$ssoLogoutUrl) {
-            throw new \Exception("sso logout url required", ErrCode::PARAM_VALIDATE_FAIL);
         }
 
         // 删除 sso 的会话
