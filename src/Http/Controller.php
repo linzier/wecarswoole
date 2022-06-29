@@ -432,7 +432,7 @@ class Controller extends EsController
         if (!$session = $this->requestParams['__session__']) {
             return;
         }
-        
+
         if (!$ticket = $session['__ticket'] ?? '') {
             return;
         }

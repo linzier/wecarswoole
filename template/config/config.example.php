@@ -123,10 +123,10 @@ $baseConfig = [
     // jwt 签名用的 key，需要保证足够的强度
     // PHP7 以上建议用 bin2hex(random_bytes(32)) 生成
     'jwt_sign_key' => apollo('application', 'jwt_sign_key') ?? '',
-    // 是否对 jwt 串加密。需配合 jwt_secret 使用，没提供 jwt_secret 则一定不加密
-    'jwt_encrypt_on' => apollo('application', 'jwt_encrypt_on') ?? 1,
     // jwt token 过期时间
     'jwt_expire' => apollo('application', 'jwt_expire') ?? 3600 * 3,
+    // 是否对 jwt 的 payload 加密。需配合 jwt_secret 使用，没提供 jwt_secret 则不加密
+    'jwt_encrypt_on' => apollo('application', 'jwt_encrypt_on') ?? 0,
     // jwt 内容加密用的 secret，留空则不加密
     'jwt_secret' => apollo('application', 'jwt_secret') ?? '',
     /**
@@ -135,7 +135,7 @@ $baseConfig = [
     // xss 攻击防御
     // 如果系统接受用户输入，则强烈建议开启；如果仅由其他系统调用，且调用参数可控，则可不开启
     // 默认关闭。因为很多系统是作为服务供其他系统调用，无需开启（开启后会些许影响性能）
-    'xss_filter' => apollo('application', 'xss_filter_on') ?? 0,
+    'xss_filter' => apollo('application', 'xss_filter') ?? 0,
     // 去除输入参数的首尾空格
     'trim_whitespace' => apollo('application', 'trim_whitespace') ?? 1,
 ];
