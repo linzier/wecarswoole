@@ -495,16 +495,16 @@ class Controller extends EsController
             throw new \Exception("build token fail:jwt sign key required", ErrCode::PARAM_VALIDATE_FAIL);
         }
 
-        $expire = isset($data['__exp']) ? $data['__exp'] : $conf->getConf('jwt_expire');
-
         // 剔除掉 jwt 关键字
         $data = array_filter($data, function ($key) {
-            return !in_array($key, ['iss', 'exp', 'sub', 'aud', 'nbf', 'iat', 'jti', '__exp']);
+            return !in_array($key, ['iss', 'exp', 'sub', 'aud', 'nbf', 'iat', 'jti']);
         }, ARRAY_FILTER_USE_KEY);
 
         if (!$data) {
             return '';
         }
+
+        $data['__exp'] = $data['__exp'] ?? $conf->getConf('jwt_expire');
 
         $config = Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($signKey));
         $now = new DateTimeImmutable();
@@ -512,7 +512,7 @@ class Controller extends EsController
             ->issuedBy('weicheche.cn')
             ->issuedAt($now)
             ->canOnlyBeUsedAfter($now)
-            ->expiresAt($now->modify("+{$expire} second"));
+            ->expiresAt($now->modify("+{$data['__exp']} second"));
 
         foreach ($data as $k => $v) {
             $builder->withClaim($k, $v);
