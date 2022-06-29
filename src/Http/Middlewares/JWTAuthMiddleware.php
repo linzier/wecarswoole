@@ -45,7 +45,7 @@ class JWTAuthMiddleware implements IRouteMiddleware
             throw new AuthException("invalid invoke:jwt key required", ErrCode::PARAM_VALIDATE_FAIL);
         }
 
-        if (!$tokenStr = $request->getHeader('Authorization')) {
+        if (!$tokenStr = $request->getHeader('Authorization')[0] ?? '') {
             throw new AuthException("invalid invoke:Authorization header required", ErrCode::PARAM_VALIDATE_FAIL);
         }
 

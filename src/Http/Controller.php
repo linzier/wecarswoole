@@ -493,7 +493,7 @@ class Controller extends EsController
 
         $config = Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText($signKey));
         $now = new DateTimeImmutable();
-        $expire = $data['exp'] ?: $conf->getConf('jwt_expire');
+        $expire = $data['exp'] ?? $conf->getConf('jwt_expire');
         $builder = $config->builder()
             ->issuedBy('weicheche.cn')
             ->issuedAt($now)
