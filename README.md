@@ -9,8 +9,8 @@ WecarSwoole 是基于 EasySwoole 开发的适用于喂车业务系统的 Web 开
 
 ### 环境要求
 - PHP >= 7.4
-- Swoole >= 4.3.0
-- phpredis 扩展
+- swoole >= 4.3.0
+- PHP 扩展：sodium、phpredis、openssl
   
 ### 系统设计要点
 - 可扩展性
