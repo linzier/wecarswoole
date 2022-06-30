@@ -47,17 +47,19 @@ WecarSwoole 是基于 EasySwoole 开发的适用于喂车业务系统的 Web 开
 - [Exception](./readme/exception.md)
 - [中间件](./readme/middleware.md)
 - 基础设施
-    - [Email](./readme/email.md)
+    - [邮件（Email）](./readme/email.md)
     
-    - [Logger](./readme/logger.md)
+    - [日志（Logger）](./readme/logger.md)
 
-    - [Cache](./readme/cache.md)
+    - [缓存（Cache）](./readme/cache.md)
 
     - [Redis](./readme/redis.md)
 
     - [MySQL](./readme/mysql.md)
 
-    - [Queue](./readme/queue.md)
+    - [队列（Queue）](./readme/queue.md)
+  
+    - [短信（SMS）](./readme/sms.md)
 - [事务](./readme/trans.md)
 - [Sentinel(哨兵)](./readme/sentinel.md)
 - [自定义进程](./readme/process.md)
