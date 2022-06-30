@@ -4,14 +4,18 @@
 
 - `AnnotationAnalyser`：注解分析器。
   - `getPropertyAnnotations(string $className, array $annotationFilters = []):array`：获取类属性注解信息
+
 - `File`：文件/目录操作工具，继承 `\EasySwoole\Utility\File`。
   - `join(...$paths):string`：拼接文件名
   - … easyswoole 提供的功能
+
 - `Url`：Url 辅助类。
   - `realUrl(string $path, array $queryParams = [], array $flagParams = [])`：根据配置文件生成绝对 url，支持绝对、相对、伪协议模式如WX://path/to/name会根据配置中心配置转成诸如 https://wx.weicheche.cn/path/to/name。
   - `assemble(string $uri, string $base = '', array $queryParams = [], array $flagParams = []): string`：组装 url
   - `parse(string $url): array`：解析出 schema,host,path,query_string
+
 - `Mock`：模拟数据生成器。
+
 - `CContext`：协程上下文对象。在写协程并发程序时，为防止单例（或静态类）的变量在协程间相互影响，可以使用协程上下文对象来保存变量。用法：
   ```
   <?php
@@ -36,6 +40,7 @@
       }
     }
   ```
+
 - `Concurrent`：并发执行业务逻辑，并等待所有逻辑执行完成后返回所有的执行结果。注意必须在协程上下文中使用。使用实例（注意必须在协程中使用）：
   ```
     // 便捷使用
@@ -88,6 +93,16 @@
     $rsts = Concurrent::new()->throwError()->addTask(...)->addParams(...)->exec();
   ```
 
+- Encrypt 对称加解密：
+  ```
+    use WecarSwoole\Util\Encrypt;
+
+    // 加密
+    $encTxt = Encrypt::enc($txt, $secret);
+
+    // 解密
+    $txt = Encrypt::dec($encTxt, $secret);
+  ```
 
 [返回](../README.md)
 
