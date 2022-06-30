@@ -41,6 +41,20 @@ class ApiAuthMiddleware implements IRouteMiddleware
         $appId = $request->getRequestParam('app_id');
         $token = $request->getRequestParam('token');
 
+        if (!$appId) {
+            $cType = $request->getHeader('content-type')[0] ?? "form-data";
+            if ($cType == 'application/json') {
+                $request->getBody()->rewind();
+                $content = $request->getBody()->getContents();
+                $request->getBody()->rewind();
+
+                if ($content && $content = json_decode($content, true)) {
+                    $appId = $content['app_id'];
+                    $token = $content['token'];
+                }
+            }
+        }
+
         if (!$appId || !$token) {
             throw new AuthException("invalid invoke:no app_id or token.", ErrCode::PARAM_VALIDATE_FAIL);
         }
