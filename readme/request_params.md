@@ -33,3 +33,5 @@ url query string + 根据 content-type 解析出的 body 的值（数组格式�
 ...
 'trim_whitespace' => apollo('application', 'trim_whitespace') ?? 1,
 ```
+
+**注意：**控制器尽量只使用 $this->params(...) 的方式拿请求数据，上面的过滤仅在这种方式下有效，如果通过诸如 $this->request()->getParsedBody() 获取的，仍然存在 xss 风险。
