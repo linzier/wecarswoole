@@ -61,19 +61,20 @@ class RequestRecordMiddleware implements IControllerMiddleware
             return $next($request, $response);
         }
 
+        $request->getBody()->rewind();
+        $reqStr = $request->getBody()->getContents();
+        $request->getBody()->rewind();
+
         $response->getBody()->rewind();
         $respStr = $response->getBody()->getContents();
         $response->getBody()->rewind();
 
-        $context = [
-            'request_url' => strval($request->getUri()),
-            'request_from' => $request->getServerParams()['remote_addr'],
-            'request_params' => $request->getRequestParam(),
-            'response_body' => $respStr,
-            'use_time' => time() - $this->startTime
-        ];
+        $uri = strval($request->getUri());
+        $from = $request->getServerParams()['remote_addr'];
+        $time = time() - $this->startTime;
+        $msg = "请求信息:request_url:$uri; request_from:$from; request_raw_body:{$reqStr}; response_raw_body:{$respStr}; use_time:{$time}s";
 
-        Container::get(LoggerInterface::class)->log(LogLevel::INFO, "请求信息:", $context);
+        Container::get(LoggerInterface::class)->log(LogLevel::INFO, $msg);
 
         return $next($request, $response);
     }

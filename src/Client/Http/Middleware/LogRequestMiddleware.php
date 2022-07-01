@@ -39,11 +39,19 @@ class LogRequestMiddleware implements IRequestMiddleware
             return $next($config, $request, $response);
         }
 
-        $this->logger->log(
-            $this->logLevel($response),
-            'API 调用信息',
-            $this->logContext($config, $request, $response)
-        );
+        $rpBody = $response->getBody();
+        $rpBody->rewind();
+        $respStr = $rpBody->getContents();
+        $rpBody->rewind();
+
+        $uri = strval($request->getUri());
+        $reqStr = $request->getBody()->getContents();
+        $time = time() - $this->startTime;
+
+        $msg = "API调用信息: request_url:{$uri}; request_raw_body:{$reqStr}; response_http_code:{$response->getStatusCode()}; "
+            . "response_reason:{$response->getReasonPhrase()}; response_raw_body:{$respStr}; use_time:{$time}s";
+
+        $this->logger->log($this->logLevel($response), $msg);
 
         return $next($config, $request, $response);
     }
@@ -52,31 +60,5 @@ class LogRequestMiddleware implements IRequestMiddleware
     {
         return $response->getStatusCode() >= 200 && $response->getStatusCode() < 400 ?
             LogLevel::INFO : LogLevel::CRITICAL;
-    }
-
-    protected function logContext(HttpConfig $config, RequestInterface $request, ResponseInterface $response): array
-    {
-        $rpBody = $response->getBody();
-        $rpBody->rewind();
-        $respStr = $rpBody->getContents();
-        $rpBody->rewind();
-
-        $rqBody = $request->getBody();
-        $rqBody->rewind();
-        $reqStr = $rqBody->getContents();
-        $rqBody->rewind();
-
-        return [
-            'use_time' => time() - $this->startTime,
-            'request' => [
-                'url' => strval($request->getUri()),
-                'body' => $reqStr,
-            ],
-            'response' => [
-                'http_code' => $response->getStatusCode(),
-                'reason' => $response->getReasonPhrase(),
-                'body' => $respStr,
-            ]
-        ];
     }
 }
