@@ -61,20 +61,19 @@ class RequestRecordMiddleware implements IControllerMiddleware
             return $next($request, $response);
         }
 
-        $respVal = (string)$response->getBody();
-        $respVal = json_decode($respVal, true) ?? $respVal;
-
+        $response->getBody()->rewind();
+        $respStr = $response->getBody()->getContents();
         $response->getBody()->rewind();
 
-        $uri = $request->getUri()->getPath() . '?' . $request->getUri()->getQuery();
         $context = [
-            'params' => $request->getRequestParam(),
-            'response' => $respVal,
-            'from' => $request->getServerParams()['remote_addr'],
+            'request_url' => strval($request->getUri()),
+            'request_from' => $request->getServerParams()['remote_addr'],
+            'request_params' => $request->getRequestParam(),
+            'response_body' => $respStr,
             'use_time' => time() - $this->startTime
         ];
 
-        $this->log($uri, $context);
+        Container::get(LoggerInterface::class)->log(LogLevel::INFO, "请求信息:", $context);
 
         return $next($request, $response);
     }
@@ -85,10 +84,5 @@ class RequestRecordMiddleware implements IControllerMiddleware
         $this->startTime = null;
         $this->beforeDone = false;
         return $next();
-    }
-
-    protected function log(string $uri, array $context)
-    {
-        Container::get(LoggerInterface::class)->log(LogLevel::INFO, "请求信息:{$uri}", $context);
     }
 }

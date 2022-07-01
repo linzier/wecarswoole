@@ -56,28 +56,26 @@ class LogRequestMiddleware implements IRequestMiddleware
 
     protected function logContext(HttpConfig $config, RequestInterface $request, ResponseInterface $response): array
     {
-        $responseBody = $response->getBody()->getContents();
-        // buffer 重新写入供后面用
-        $buff = new BufferStream(strlen($responseBody));
-        $buff->write($responseBody);
-        $response->withBody($buff);
+        $rpBody = $response->getBody();
+        $rpBody->rewind();
+        $respStr = $rpBody->getContents();
+        $rpBody->rewind();
 
-        $requestBody = $request->getBody()->getContents();
-        // buffer 重新写入供后面用
-        $buff = new BufferStream(strlen($requestBody));
-        $buff->write($requestBody);
-        $request->withBody($buff);
+        $rqBody = $request->getBody();
+        $rqBody->rewind();
+        $reqStr = $rqBody->getContents();
+        $rqBody->rewind();
 
         return [
             'use_time' => time() - $this->startTime,
             'request' => [
                 'url' => strval($request->getUri()),
-                'body' => json_decode($requestBody, true) ?? $requestBody,
+                'body' => $reqStr,
             ],
             'response' => [
                 'http_code' => $response->getStatusCode(),
                 'reason' => $response->getReasonPhrase(),
-                'body' => json_decode($responseBody, true) ?? $responseBody,
+                'body' => $respStr,
             ]
         ];
     }
