@@ -20,7 +20,6 @@ use WecarSwoole\Util\Encrypt;
 
 /**
  * jwt 认证中间件
- * 认证成功后会生成
  */
 class JWTAuthMiddleware implements IRouteMiddleware
 {
