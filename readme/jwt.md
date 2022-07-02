@@ -301,6 +301,23 @@ class ThirdJWTRoute extends Route
 
 系统使用 AES-128-CBC 对称加密算法加解密的。
 
+### 在控制器中获取会话上下文信息：
+在控制器中通过`$this->session($key)`获取会话信息（如 $this->session('uid') 获取登录用户的 id）。
+单点登录模式下，session 中默认有下面这些字段：
+```php
+[
+    'uid' => $loginerId,
+    'account' => $account,
+    'name' => $name,
+    'phone' => $phone,
+];
+```
+程序中可以用 `$this->session($key, $val)` 设置 session 信息，如 `$this->session('user_sex', '男')`。
+因为 session 数据是存在 jwt token 中，放在 HTTP Header 中的，不要在 session 中存太多东西，session 中只放登录用户的基本信息，其它信息要通过数据库或 Redis 获取。
+
+**为何只能在控制器中通过 $this->session() 操作 session？**
+做此限制是为了防止 session 污染。大部分框架（包括 PHP 自身）都提供了全局变量或函数操作 session，结果是到处都能看到 session 的身影（控制器、Service、Logic、Model 中），使得代码维护非常困难。
+
 ### key 和 secret 的强度
 
 不能太简单。PHP7 以上建议用 bin2hex(random_bytes(32)) 生成。或者网上在线工具生成皆可。
