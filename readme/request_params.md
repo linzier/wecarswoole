@@ -27,6 +27,31 @@ url query string + 根据 content-type 解析出的 body 的值（数组格式�
 
 对于管理后台项目强烈建议开启，防止 XSS 攻击；对于仅提供给其他系统调用的服务，可不开启；
 
+如果开启 xxs 过滤导致某些字段出问题，可以设置对该字段不做 xss 处理，由应用层自己做特别处理：
+```php
+// 在控制器中设置下面的方法（覆盖基类的）
+class YourController extends Controller
+{
+    protected function xssExcludes(): array
+    {
+        // 设置 myActionName 这个 action 的 name 和 loves 两个字段不做 xss 过滤，由应用自己处理
+        return [
+            'myActionName' => ['name', 'loves'],
+        ];
+    }
+}
+```
+注意：只能设置一级字段，比如请求是如下的 json 格式（Content-Type:application/json）：
+```json
+{
+  "loves": {
+    "out": ["love1","love2"],
+    "in": ["love3","love4"]
+  }
+}
+```
+在 xssExcludes() 中只能配 loves 不进行 xss 过滤，不能设置 loves 下面的 out 字段。
+
 2. 框架默认会对输入字符串做首尾去空格，可以在 apollo 中配置关闭：
 ```php
 // config.php
