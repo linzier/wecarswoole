@@ -52,6 +52,8 @@ class YourController extends Controller
 ```
 在 xssExcludes() 中只能配 loves 不进行 xss 过滤，不能设置 loves 下面的 out 字段。
 
+另外，框架用的 xss 过滤器在富文本环境未充分验证其正确性，如果因其过滤导致富文本出现问题，则可排除掉富文本字段，在业务中使用专门的富文本处理库 [ezyang/htmlpurifier](http://htmlpurifier.org) 去过滤。
+
 2. 框架默认会对输入字符串做首尾去空格，可以在 apollo 中配置关闭：
 ```php
 // config.php
@@ -60,3 +62,5 @@ class YourController extends Controller
 ```
 
 **注意：**控制器尽量只使用 $this->params(...) 的方式拿请求数据，上面的过滤仅在这种方式下有效，如果通过诸如 $this->request()->getParsedBody() 获取的，仍然存在 xss 风险。
+
+3. 请求参数验证器：参见[控制器](./readme/controller.md)
