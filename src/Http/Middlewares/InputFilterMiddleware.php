@@ -34,7 +34,15 @@ class InputFilterMiddleware extends Middleware implements IControllerMiddleware
         $xssFilter = boolval(intval(Config::getInstance()->getConf('xss_filter') ?? 0));
         $trimSpace = boolval(intval(Config::getInstance()->getConf('trim_whitespace') ?? 1));
 
-        $this->proxy->requestParams = $this->filter($this->proxy->requestParams, $xssFilter, $trimSpace, $antiXss);
+        $action = basename(explode('?', $request->getRequestTarget())[0]);
+        $xssEx = $this->proxy->xssExcludes();
+        $xssEx = $xssEx[$action] ?? [];
+
+        $p = [];
+        foreach ($this->proxy->requestParams as $k => $val) {
+            $p[$k] = $this->filter($val, $xssFilter && !in_array($k, $xssEx), $trimSpace, $antiXss);
+        }
+        $this->proxy->requestParams = $p;
 
         return $next($request, $response);
     }

@@ -108,6 +108,23 @@ class Controller extends EsController
         return [];
     }
 
+    /**
+     * 哪些字段不要做 xss 过滤
+     * 框架内置的 xss 处理结果可能不符合预期（比如带来了意外的修改，或者带来了较大的性能问题），则可以将特定字段排除在外
+     * 由应用自己处理
+     * 格式：
+     * [
+     *      $actionName => [$field1, $field2,...],
+     * ]
+     * 注意：$field 仅支持第一维的字段，比如输入参数是 json 格式：
+     *      {"loves":{"out":["loves1"]}}，仅支持设置不过滤 loves 字段，不能设置 loves 里面的 out
+     * @return array
+     */
+    protected function xssExcludes(): array
+    {
+        return [];
+    }
+
     public function index()
     {
         // do nothing
