@@ -17,7 +17,7 @@
         "dev/mysql": "^1.0",
         "easyswoole/queue": "2.*",
         "lcobucci/jwt": "^4.1",
-        "ezyang/htmlpurifier": "^4.14"
+        "voku/anti-xss": "^4.1"
     },
     "repositories": {
         "0": {
