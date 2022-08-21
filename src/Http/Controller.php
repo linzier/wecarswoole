@@ -177,10 +177,16 @@ class Controller extends EsController
 
     protected function gc()
     {
-        $this->execMiddlewares('gc');
         $this->responseData = null;
-
+        $this->requestParams = null;
+        
         parent::gc();
+
+        try {
+            $this->execMiddlewares('gc');
+        } catch (\Throwable $e) {
+            // nothing
+        }
     }
 
     /**
