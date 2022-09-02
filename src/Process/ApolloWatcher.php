@@ -9,6 +9,8 @@ use WecarSwoole\Config\Apollo\Client;
 use EasySwoole\EasySwoole\Config as EsConfig;
 use Swoole\Process;
 use WecarSwoole\Util\File;
+use DI\ContainerBuilder;
+use EasySwoole\Component\Di;
 
 /**
  * apollo 配置变更监控程序
@@ -39,6 +41,9 @@ class ApolloWatcher extends AbstractProcess
         go(function () {
             EsConfig::getInstance()->loadFile(File::join(CONFIG_ROOT, 'apollo.php'), false);
             $apolloConf = EsConfig::getInstance()->getConf('apollo');
+
+            // 注册 di
+            $this->registerDI();
 
             $this->writeFlag();
 
@@ -94,5 +99,12 @@ class ApolloWatcher extends AbstractProcess
         }
 
         return File::join(STORAGE_ROOT, "temp/{$name}.txt");
+    }
+
+    private function registerDI()
+    {
+        $builder = new ContainerBuilder();
+        $builder->addDefinitions(File::join(CONFIG_ROOT, 'di/di.php'));
+        Di::getInstance()->set('di-container', $builder->build());
     }
 }

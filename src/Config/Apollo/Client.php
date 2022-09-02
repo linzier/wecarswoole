@@ -2,10 +2,12 @@
 
 namespace WecarSwoole\Config\Apollo;
 
+use Psr\Log\LoggerInterface;
 use Swlib\Http\Exception\HttpExceptionMask;
 use Swlib\Saber;
 use Swoole\Coroutine;
 use WecarSwoole\Config\Config;
+use WecarSwoole\Container;
 
 /**
  * Apollo 客户端
@@ -75,8 +77,14 @@ class Client
      */
     public function start(\Closure $callback = null)
     {
+        $logger = Container::get(LoggerInterface::class);
+
+        $logger->info("apollo:start apollo monitor");
+
         do {
             $notifyResults = $this->get($this->getNotifyUrl(), $this->intervalTimeout);
+
+            $logger->info("apollo:get notify info:" . print_r($notifyResults, true));
 
             if ($notifyResults['http_code'] != 200) {
                 Coroutine::sleep(10);
@@ -100,6 +108,8 @@ class Client
 
             if ($pullRst['reloaded']) {
                 // 有配置变动，需要调用回调函数
+                $logger->info("apollo:config changed,reload");
+                
                 $callback && $callback();
             }
 
