@@ -109,7 +109,7 @@ class Client
             if ($pullRst['reloaded']) {
                 // 有配置变动，需要调用回调函数
                 $logger->info("apollo:config changed,reload");
-                
+
                 $callback && $callback();
             }
 
@@ -166,11 +166,18 @@ class Client
 
     private function saveToFile(string $file, string $content)
     {
-        $dir = dirname($file);
-        if (!file_exists($dir)) {
-            mkdir($dir, 0755, true);
+        try {
+            $dir = dirname($file);
+            if (!file_exists($dir)) {
+                mkdir($dir, 0755, true);
+            }
+
+            Container::get(LoggerInterface::class)->info("apollo:save to file:" . $file);
+
+            file_put_contents($file, $content);
+        } catch (\Throwable $e) {
+            Container::get(LoggerInterface::class)->critical("apollo:save to file fail.file:{$file},reason:" . $e->getMessage());
         }
-        file_put_contents($file, $content);
     }
 
     private function getReleaseKey($configFile)
