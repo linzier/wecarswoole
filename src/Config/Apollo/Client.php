@@ -22,7 +22,7 @@ class Client
     protected $cluster = 'default';
     protected $clientIp; //绑定IP做灰度发布用
     protected $notifications = [];
-    protected $pullTimeout = 5; //获取某个namespace配置的请求超时时间
+    protected $pullTimeout = 6; //获取某个namespace配置的请求超时时间
     protected $intervalTimeout = 70; //每次请求获取apollo配置变更时的超时时间
 
     /**
@@ -104,7 +104,15 @@ class Client
                 continue;
             }
 
-            $pullRst = $this->pullConfigBatch(array_keys($changeList));
+            $logger->info("apollo:get changelist,will pull data.changelist:" . print_r($changeList, true));
+
+            try {
+                $pullRst = $this->pullConfigBatch(array_keys($changeList));
+            } catch (\Throwable $e) {
+                $logger->critical("apollo:pull data fail.reason:" . $e->getMessage());
+                Coroutine::sleep(5);
+                continue;
+            }
 
             if ($pullRst['reloaded']) {
                 // 有配置变动，需要调用回调函数
@@ -135,6 +143,8 @@ class Client
         $reloaded = false;
 
         $responses = $this->requestAll($this->getPullUrls($namespaces), $this->pullTimeout);
+
+        Container::get(LoggerInterface::class)->info("apollo:get data response:" . print_r($responses, true));
 
         foreach ($namespaces as $namespace) {
             $responseList[$namespace] = true;
@@ -250,8 +260,7 @@ class Client
         }
 
         $saber = Saber::create([
-            'timeout' => $timeout,
-            'exception_report' => HttpExceptionMask::E_NONE
+            'timeout' => $timeout
         ]);
 
         $responseMap = $saber->requests(
