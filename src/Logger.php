@@ -236,8 +236,9 @@ class Logger extends AbstractLogger
             $mailerConfig['encryption'] ?: 'ssl'
         );
 
-        $messager = new \Swift_Message($config['subject'] ?? "日志邮件告警");
-        $messager->setFrom(["{$mailerConfig['username']}" => $config['subject'] ?? "日志邮件告警"])
+        $subject = ($config['subject'] ?? "日志邮件告警") . '[' . ENVIRON . ']';
+        $messager = new \Swift_Message($subject);
+        $messager->setFrom(["{$mailerConfig['username']}" => $subject])
             ->setTo(array_keys($config['to']));
         $emailHandler = new SwiftMailerHandler($mailer, $messager, $levelNum, false);
 
