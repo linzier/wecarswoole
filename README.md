@@ -11,6 +11,7 @@ WecarSwoole 是基于 EasySwoole 开发的适用于喂车业务系统的 Web 开
 - PHP >= 7.4
 - swoole >= 4.3.0
 - PHP 扩展：sodium、phpredis、openssl
+- 编译swoole的时候要显式开启支持 openssl，参见 [swoole 编译](https://wiki.swoole.com/#/environment)
   
 ### 系统设计要点
 - 可扩展性
