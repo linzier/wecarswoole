@@ -229,7 +229,6 @@ class Client
         $params = [
             'appId' => $this->appId,
             'cluster' => $this->cluster,
-            'clusterName' => $this->cluster,
             'notifications' => json_encode(array_values($this->notifications)),
         ];
 
