@@ -3,8 +3,6 @@
 namespace WecarSwoole\Config\Apollo;
 
 use Psr\Log\LoggerInterface;
-use Swlib\Http\Exception\HttpExceptionMask;
-use Swlib\Saber;
 use Swoole\Coroutine;
 use WecarSwoole\Config\Config;
 use WecarSwoole\Container;
@@ -241,15 +239,29 @@ class Client
      */
     private function get(string $url, int $timeout): array
     {
-        $saber = Saber::create([
-            'timeout' => $timeout,
-            'exception_report' => HttpExceptionMask::E_NONE
-        ]);
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_HEADER, false);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_TIMEOUT , $timeout);
+        $result = curl_exec($ch);
 
-        $response = $saber->get($url);
+        if($error_code = curl_errno($ch)) {
+            $err = curl_strerror($error_code) . ".详细信息：" . print_r(curl_getinfo($ch), true);
+            curl_close($ch);
+
+            Container::get(LoggerInterface::class)->error("apollo:get {$url} fail:" . $err);
+            return [
+                'http_code' => 500,
+                'response' => $err,
+            ];
+        }
+
+        curl_close($ch);
+        
         return [
-            'http_code' => $response->getStatusCode(),
-            'response' => json_decode(strval($response->getBody()), true)
+            'http_code' => $result ? 200 : 304,
+            'response' => $result ? json_decode($result, true) : [],
         ];
     }
 
@@ -259,31 +271,11 @@ class Client
             return [];
         }
 
-        $saber = Saber::create([
-            'timeout' => $timeout
-        ]);
-
-        $responseMap = $saber->requests(
-            array_map(
-                function ($url) {
-                    return ['get', $url];
-                },
-                $urls
-            )
-        );
-
-        if (!$responseMap) {
-            return [];
+        $rsts = [];
+        foreach ($urls as $url) {
+            $rsts[] = $this->get($url, $timeout);
         }
 
-        return array_map(
-            function ($response) {
-                return [
-                    'http_code' => $response->getStatusCode(),
-                    'response' => json_decode(strval($response->getBody()), true)
-                ];
-            },
-            $responseMap->getArrayCopy()
-        );
+        return $rsts;
     }
 }
