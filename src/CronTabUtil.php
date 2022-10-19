@@ -22,6 +22,7 @@ class CronTabUtil
     public static function register()
     {
         if (self::$createdCron) {
+            echo "swoole crontab:crontab already exists\n";
             return;
         }
 
@@ -30,6 +31,7 @@ class CronTabUtil
 
         // 兼容旧版（旧版的crontab服务器ip是在cron.php里面配置的，且需要在此处决定是否要在此服务器创建定时任务）
         if (isset($conf['ip']) && !self::willRunCrontabOld($conf)) {
+            echo "swoole crontab:will not run crontab\n";
             return;
         }
 
@@ -38,12 +40,14 @@ class CronTabUtil
         $tasks = $conf['tasks'] ?? $conf;// 新旧格式兼容
 
         if (!$tasks) {
+            echo "swoole crontab:no crontab task\n";
             return;
         }
 
         // 添加定时任务
         $crontab = WecarCrontab::getInstance(isset($conf['ip']) ? false : true);
         foreach ($tasks as $task) {
+            echo "swoole crontab:add task:" . print_r($task, true);
             $crontab->addTask($task);
         }
 

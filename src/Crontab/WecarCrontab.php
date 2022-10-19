@@ -142,6 +142,8 @@ class WecarCrontab
             return;
         }
 
+        echo "swoole crontab:start to run crontab\n";
+
         $server = ServerManager::getInstance()->getSwooleServer();
         $runner = new WecarCronRunner("crontab", $this->tasks);
         $runner->setWillCheckServer($this->willCheckServer);

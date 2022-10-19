@@ -35,12 +35,14 @@ class WecarCronRunner extends WecarAbstractProcess
     protected function exec($arg)
     {
         if (!$this->willExec) {
+            echo "swoole crontab:will not exec,return\n";
             return;
         }
 
         $this->tasks = $arg;
         $this->cronProcess();
         Timer::getInstance()->loop(29 * 1000, function () {
+            echo "swoole crontab:loop cronprocess\n";
             $this->cronProcess();
         });
     }
@@ -54,6 +56,7 @@ class WecarCronRunner extends WecarAbstractProcess
             $distanceTime = $nextRunTime->getTimestamp() - time();
             if ($distanceTime < 30) {
                 Timer::getInstance()->after($distanceTime * 1000, function () use ($taskName, $taskRule) {
+                    echo "swoole crontab:exec task:{$taskName}\n";
                     $nextRunTime = CronExpression::factory($taskRule)->getNextRunDate();
                     $table = TableManager::getInstance()->get(WecarCrontab::$__swooleTableName);
                     $table->incr($taskName, 'taskRunTimes', 1);
