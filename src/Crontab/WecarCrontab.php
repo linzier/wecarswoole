@@ -142,7 +142,7 @@ class WecarCrontab
             return;
         }
 
-        echo "swoole crontab:start to run crontab\n";
+        echo date('Y-m-d H:i:s') . '.' . "swoole crontab:start to run crontab\n";
 
         $server = ServerManager::getInstance()->getSwooleServer();
         $runner = new WecarCronRunner("crontab", $this->tasks);
