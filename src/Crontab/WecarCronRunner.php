@@ -54,6 +54,10 @@ class WecarCronRunner extends WecarAbstractProcess
             $taskRule = $task['taskRule'];
             $nextRunTime = CronExpression::factory($task['taskRule'])->getNextRunDate();
             $distanceTime = $nextRunTime->getTimestamp() - time();
+
+            echo date('Y-m-d H:i:s') . ".swoole crontab:loop.task:{$taskName}.rule:{$task['taskRule']}.nextruntime:"
+            . date('Y-m-d H:i:s', $nextRunTime->getTimestamp()) . "\n";
+
             if ($distanceTime < 30) {
                 Timer::getInstance()->after($distanceTime * 1000, function () use ($taskName, $taskRule) {
                     echo date('Y-m-d H:i:s') . '.' . "swoole crontab:exec task:{$taskName}\n";
