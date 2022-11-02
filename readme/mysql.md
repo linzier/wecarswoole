@@ -1,6 +1,6 @@
 ### MySQL
 
-使用 [dev/mysql](https://gitlab4.weicheche.cn/dev/mysql) 扩展。
+使用 [dev/mysql](https://gitlab4.weicheche.cn/dev/mysql) 扩展，请参见改项目了解 SQL 语句的用法。
 
 一般情况下只在 `\WecarSwoole\Repository\MySQLRepository` 子类中使用，该类已经自动创建了 MySQL 实例，子类仅需要配置所使用的数据库别名即可。
 
