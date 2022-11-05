@@ -1,0 +1,116 @@
+<?php
+
+use WecarSwoole\Bootstrap;
+use WecarSwoole\Util\File;
+
+use function Swoole\Coroutine\run;
+
+/**
+ * 使用Linux的crontab代替easyswoole的定时任务
+ * 为了兼容，crontab代码仍然跟 easyswoole的定时任务代码一样写
+ * 需指定 --env、--task，如：
+ * php crontab --env=test --task=MyCron
+ * 使用该脚本有两个目的：
+ * 1. 可以通过该脚本使用 linux 的 crontab，代替 easyswoole 的 crontab；
+ * 2. 可以使用该脚本手动执行 crontab 任务，这在调试时很有用（虽然正式的时候仍然使用 easyswoole 的 crontab）；
+ */
+
+date_default_timezone_set('Asia/Shanghai');
+
+defined('IN_PHAR') or define('IN_PHAR', boolval(\Phar::running(false)));
+defined('RUNNING_ROOT') or define('RUNNING_ROOT', realpath(getcwd()));
+defined('EASYSWOOLE_ROOT') or define('EASYSWOOLE_ROOT', IN_PHAR ? \Phar::running() : realpath(getcwd()));
+
+require EASYSWOOLE_ROOT.'/vendor/autoload.php';
+
+defined('STORAGE_ROOT') or define('STORAGE_ROOT', File::join(EASYSWOOLE_ROOT, 'storage'));
+defined('CONFIG_ROOT') or define('CONFIG_ROOT', File::join(EASYSWOOLE_ROOT, 'config'));
+
+// 应用的常量定义
+include_once EASYSWOOLE_ROOT . '/constant.php';
+
+$args = $argv;
+
+if (count($args) < 2) {
+    exit("错误的参数\n");
+}
+
+// 环境常量定义
+if (!defined('ENVIRON')) {
+    $env = 'dev';
+    foreach ($args as $param) {
+        if (strpos($param, '--env') !== false) {
+            $env = trim(explode('=', $param)[1]);
+            break;
+        }
+    }
+
+    $serverEnv = 'dev';
+    switch ($env) {
+        case 'test':
+            define('ENVIRON', 'test');
+            break;
+        case 'preview':
+            define('ENVIRON', 'preview');
+            break;
+        case 'produce':
+            $serverEnv = 'produce';
+            define('ENVIRON', 'produce');
+            break;
+        default:
+            define('ENVIRON', 'dev');
+            break;
+    }
+
+    $args[] = $serverEnv;
+}
+
+// 是否调试模式
+!defined('DEBUG_MODEL') && define('DEBUG_MODEL', !in_array('d', $args) && in_array('--debug', $args));
+
+/**
+ * crontab信息
+ */
+$cronName = $args[1];
+foreach ($args as $param) {
+    if (strpos($param, '--task') !== false) {
+        $cronName = trim(explode('=', $param)[1]);
+        break;
+    }
+}
+
+if (!$cronName) {
+    exit("请指定cron name\n");
+}
+
+echo "crontab name:$cronName\n";
+
+$cronClass = "\\App\\Cron\\$cronName";
+if (!class_exists($cronClass)) {
+    exit("class not found:$cronClass\n");
+}
+
+// 执行
+// 为了兼容，需要在协程中执行
+run(function () use ($cronClass, $cronName) {
+    // 调 $cronClass 的 run(\swoole_server $server, int $taskId, int $fromWorkerId, $flags = null)
+    echo "begin run crontab:$cronName.time:" . date("Y-m-d H:i:s") . "\n";
+
+    try {
+        // 先执行应用的 boot
+        Bootstrap::boot();
+
+        // 创建一个server桩件
+        $server = (new ReflectionClass(\Swoole\Server::class))->newInstanceWithoutConstructor();
+        // 执行业务代码
+        (new $cronClass())->run($server, 0, 0);
+    } catch (\Throwable $e) {
+        echo "crontab $cronName run error:" . $e->getMessage() . ".trace:" . $e->getTraceAsString() . "\n";
+    }
+
+    echo "end run crontab:$cronName.time:" . date("Y-m-d H:i:s") . "\n";
+
+    // 退出事件循环
+    Timer::getInstance()->clearAll();
+    Event::exit();
+});

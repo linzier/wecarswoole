@@ -58,4 +58,19 @@
 >    }
 > ```
 
+
+- 如何手动执行（调试）crontab 脚本：
+
+  v1.1.32 以及以后的框架版本，在项目根目录有个 crontab 脚本文件，可以用该脚本来手动执行 crontab 脚本。
+
+  命令：`php crontab --env=test --task=MyCron`。
+
+  **该脚本有两个用途：**
+  1. 可以通过该脚本使用 linux 的 crontab，代替 easyswoole 的 crontab（不在 config/cron.php 文件中配置 easyswoole 的 crontab，而是直接用 linux 的 crontab 执行上面的命令）；
+  2. 可以使用该脚本手动执行 crontab 任务，这在调试时很有用（虽然正式的时候仍然使用 easyswoole 的 crontab）；
+
+  **旧版本框架如何使用：**
+  1. 将最新版本框架的 template/ 目录下的 crontab 文件内容拷贝到你的项目根目录中；
+  2. 在项目中执行 `composer update dev/mysql --no-plugins` 将 dev/mysql 库更新到最新版本（旧版本在使用 crontab 脚本时有 bug）；
+
 [返回](../README.md)

@@ -62,10 +62,10 @@ class Logger extends AbstractLogger
         $server = ServerManager::getInstance()->getSwooleServer();
         $log = new Log(['level' => $level, 'message' => $this->wrapMessage($message), 'context' => $context, 'name' => $this->loggerName]);
         // 如果在工作进程中，则投递异步任务，否则直接执行（task进程不能投递异步任务）
-        if (!$server->taskworker) {
+        if ($server && !$server->taskworker) {
             TaskManager::async($log);
         } else {
-            $log->__onTaskHook($server->worker_id, $server->worker_id);
+            $log->__onTaskHook($server->worker_id ?? 0, $server->worker_id ?? 0);
         }
     }
 
