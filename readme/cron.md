@@ -71,6 +71,7 @@
 
   **旧版本框架如何使用：**
   1. 将最新版本框架的 template/ 目录下的 crontab 文件内容拷贝到你的项目根目录中；
-  2. 在项目中执行 `composer update dev/mysql --no-plugins` 将 dev/mysql 库更新到最新版本（旧版本在使用 crontab 脚本时有 bug）；
+  2. 在项目中执行`composer update framework/wecarswoole --no-plugins` 将框架更新的最新版本；
+  3. 在项目中执行 `composer update dev/mysql --no-plugins` 将 dev/mysql 库更新到最新版本（旧版本在使用 crontab 脚本时有 bug）；
 
 [返回](../README.md)
