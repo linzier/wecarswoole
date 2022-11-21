@@ -11,14 +11,16 @@ abstract class Response
     protected $status;
     protected $fromRealRequest; // 是否来自真正的请求，还是模拟的
     protected $url;// 本次请求的url（?前面的）
+    protected $headers;
 
-    public function __construct($body = '', $status = 200, $message = '', $fromRealRequest = true, $url = '')
+    public function __construct($body = '', $status = 200, $message = '', $fromRealRequest = true, $url = '', $headers = [])
     {
         $this->body = $body;
         $this->status = $status;
         $this->message = $message;
         $this->fromRealRequest = $fromRealRequest;
         $this->url = $url;
+        $this->headers = $headers;
     }
 
     public function getMessage()
@@ -52,6 +54,11 @@ abstract class Response
      * @return mixed
      */
     abstract public function getBody($field = '');
+
+    public function getHeaders(): array
+    {
+        return $this->headers;
+    }
 
     public function fromRealRequest(): bool
     {

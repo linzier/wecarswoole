@@ -12,9 +12,9 @@ use WecarSwoole\Client\Response;
  */
 abstract class ArrayResponse extends Response
 {
-    public function __construct($body = '', $status = 200, $message = '', $fromRealRequest = true, $url = '')
+    public function __construct($body = '', $status = 200, $message = '', $fromRealRequest = true, $url = '', $headers = [])
     {
-        parent::__construct($body, $status, $message, $fromRealRequest, $url);
+        parent::__construct($body, $status, $message, $fromRealRequest, $url, $headers);
 
         // 对body decode
         $decbody = $this->decodeBody($body);

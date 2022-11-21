@@ -24,7 +24,8 @@ class RawResponseParser implements IResponseParser
             $response->getStatusCode(),
             $response->getReasonPhrase(),
             $isRealRequest,
-            $url
+            $url,
+            $response->getHeaders()
         );
     }
 }
