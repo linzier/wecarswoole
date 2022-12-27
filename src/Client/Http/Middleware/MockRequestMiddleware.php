@@ -21,7 +21,7 @@ class MockRequestMiddleware implements IRequestMiddleware
     public function before(Next $next, HttpConfig $config, RequestInterface $request)
     {
         // 仅 dev、test 环境才 mock
-        if (in_array(ENVIRON, ['dev', 'test']) && ($mockData = $this->getMockData($config, $request)) && $mockData['activate']) {
+        if (in_array(ENVIRON, ['dev', 'test']) && $config->mockOn && ($mockData = $this->getMockData($config, $request)) && $mockData['activate']) {
             // 返回前先执行 next
             $next($config, $request);
 

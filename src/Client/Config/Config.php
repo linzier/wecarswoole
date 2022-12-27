@@ -36,6 +36,8 @@ class Config
      */
     public $retryNum;
     public $retryFunc;
+    // 是否启用 mock
+    public $mockOn;
 
     /**
      * 原始数组
@@ -52,6 +54,7 @@ class Config
         $this->responseParser = $apiConf['response_parser'];
         $this->retryNum = isset($apiConf['retry_num']) && isset($apiConf['retry_func']) && is_callable($apiConf['retry_func']) ? intval($apiConf['retry_num']) : 1;
         $this->retryFunc = $apiConf['retry_func'] ?? null;
+        $this->mockOn = $apiConf['mock'] ?? false;
         $this->config = $apiConf;
     }
 
