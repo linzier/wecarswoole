@@ -63,7 +63,8 @@ class Logger extends AbstractLogger
         $log = new Log(['level' => $level, 'message' => $this->wrapMessage($message), 'context' => $context, 'name' => $this->loggerName]);
         // 如果在工作进程中，则投递异步任务，否则直接执行（task进程不能投递异步任务）
         if ($server && !$server->taskworker) {
-            TaskManager::async($log);
+            // 投递到第一个 task 进程，保证日志的顺序性
+            TaskManager::async($log, null, 0);
         } else {
             $log->__onTaskHook($server->worker_id ?? 0, $server->worker_id ?? 0);
         }
