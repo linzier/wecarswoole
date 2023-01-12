@@ -65,7 +65,7 @@ $baseConfig = [
             ],
             // 连接池配置
             'pool' => [
-                'size' => apollo('application', 'mysql.weicheche.pool_size') ?: 15
+                'size' => apollo('application', 'mysql.weicheche.pool_size') ?: 10
             ]
         ],
     ],
