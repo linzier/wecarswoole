@@ -49,6 +49,22 @@
   ```
   
   可以配置 PSR 规定的所有级别。
+
+  **容器化日志问题：**
+
+  容器化中，可能多个 pod 写到同一个日志文件，导致互相覆盖，因此需要将不同 pod 写的日志文件分开，可以用 pod 名称、主机名称等来作为日志文件名称前缀，如：
+
+  ```php
+    // file: config/logger.php
+    // 这里根据项目实际情况获取标识
+    $host = getenv('HOSTNAME');
+    ...
+    'info' => [
+        // 以 hostname 作为日志前缀
+        'file' => File::join(EASYSWOOLE_ROOT, "storage/logs/{$host}-info.log"),
+    ],
+    ...
+  ```
   
 - 使用：
 
