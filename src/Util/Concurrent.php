@@ -112,6 +112,7 @@ class Concurrent
         }
 
         // 如果要求直接抛出异常，则将所有的异常合并抛出
+        $prev = null;
         if ($this->throwError) {
             $err = '';
             foreach ($returns as $rtn) {
@@ -119,12 +120,15 @@ class Concurrent
                     continue;
                 }
 
-                $err .= $rtn . ';';
+                $err .= $rtn->getMessage() . ';';
+                $prev = $rtn;
             }
+
+            $err = rtrim($err, ';');
 
             if ($err) {
                 $this->reset();
-                throw new \Exception($err, ErrCode::CONC_EXEC_FAIL);
+                throw new \Exception($err, ErrCode::CONC_EXEC_FAIL, $prev);
             }
         }
 
